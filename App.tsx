@@ -210,7 +210,7 @@ const VaultView = ({ purchased }: { purchased: string[] }) => {
         <div className="flex justify-center">
           <span className="bg-gradient-to-r from-emerald-500 to-indigo-600 text-white px-8 py-2 rounded-full font-black text-[10px] uppercase tracking-[0.4em] shadow-2xl animate-pulse">✓ ELITE ARCHIVE UNLOCKED</span>
         </div>
-        <h2 className="text-6xl md:text-8xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.8]">
+        <h2 className="text-5xl md:text-6xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.8]">
           {subject?.name} <span className="text-indigo-600">VAULT.</span>
         </h2>
         <p className="text-xl md:text-2xl font-bold text-slate-500 max-w-4xl mx-auto uppercase tracking-tighter leading-tight">Elite 50 most repeated Board Exam patterns solved with High-Yield step-by-step logic.</p>
@@ -291,6 +291,16 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (isCheckoutOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isCheckoutOpen]);
+
   const toggleCart = (id: string) => {
     setCart(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
   };
@@ -342,11 +352,11 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
   };
 
   return (
-    <div className={`p-10 md:p-20 max-w-7xl mx-auto space-y-20 relative pb-48 ${isCheckoutOpen ? 'overflow-hidden' : ''}`}>
+    <div className="p-10 md:p-16 max-w-7xl mx-auto space-y-20 relative pb-48">
        <header className="text-center space-y-10 animate-in slide-in-from-top duration-700">
-        <h2 className="text-6xl md:text-8xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">THE <span className="text-rose-600">VAULT.</span></h2>
+        <h2 className="text-6xl md:text-7xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">THE <span className="text-rose-600">VAULT.</span></h2>
         
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
            <div className="bg-indigo-600 text-white p-8 rounded-[3rem] border-4 border-indigo-400 shadow-2xl relative overflow-hidden group">
               <h4 className="text-2xl font-black uppercase tracking-tighter mb-1 relative z-10">Study Bundle</h4>
               <p className="font-bold text-indigo-100 uppercase text-[10px] tracking-widest relative z-10">Add 3+ subjects to cart</p>
@@ -422,13 +432,13 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
 
       {isCheckoutOpen && (
         <div className="fixed inset-0 z-[500] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
-           <div className="w-full max-w-5xl bg-white dark:bg-slate-950 rounded-[4rem] border-4 md:border-8 border-indigo-600 flex flex-col md:flex-row h-full max-h-[92vh] shadow-[0_50px_150px_rgba(0,0,0,0.8)] overflow-hidden relative">
+           <div className="w-full max-w-5xl bg-white dark:bg-slate-950 rounded-[4rem] border-4 md:border-8 border-indigo-600 flex flex-col md:flex-row h-full max-h-[85vh] shadow-[0_50px_150px_rgba(0,0,0,0.8)] overflow-hidden relative">
               
-              {/* Order Details Column */}
+              {/* Order Details Column (Left/Top) */}
               <div className="flex-1 p-8 md:p-14 space-y-10 overflow-y-auto no-scrollbar border-b-4 md:border-b-0 md:border-r-4 border-slate-100 dark:border-slate-900">
                  <div className="flex items-center justify-between border-b-4 pb-6 border-indigo-600">
                    <h2 className="text-3xl font-black text-black dark:text-white uppercase tracking-tighter">Order Summary</h2>
-                   <button onClick={() => setIsCheckoutOpen(false)} className="text-rose-600 font-black uppercase text-[10px] tracking-widest hover:underline">Close</button>
+                   <button onClick={() => setIsCheckoutOpen(false)} className="bg-rose-50 text-rose-600 font-black uppercase text-[10px] px-4 py-2 rounded-xl border border-rose-200 hover:bg-rose-600 hover:text-white transition-all">Back</button>
                  </div>
                  
                  <div className="space-y-4 pt-4">
@@ -438,7 +448,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
                          <div key={id} className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 shadow-sm">
                             <div className="flex items-center gap-4">
                                <span className="text-3xl">{s?.icon}</span>
-                               <span className="font-black text-sm text-black dark:text-white uppercase tracking-tight">{s?.name} Premium Vault</span>
+                               <span className="font-black text-sm text-black dark:text-white uppercase tracking-tight">{s?.name} Vault</span>
                             </div>
                             <span className="font-black text-xl text-indigo-600">₹29</span>
                          </div>
@@ -453,22 +463,22 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
                     </div>
                     {discountLabel && (
                        <div className="flex justify-between font-black uppercase text-[10px] tracking-widest text-emerald-500 animate-pulse">
-                          <span>Special Bundle Discount ({discountLabel})</span>
+                          <span>Special Discount ({discountLabel})</span>
                           <span>- ₹{discount.toFixed(0)}</span>
                        </div>
                     )}
                     <div className="flex justify-between items-center pt-6 border-t-4 border-slate-200 dark:border-slate-800">
-                       <span className="text-2xl font-black text-black dark:text-white tracking-tighter uppercase">Total Payable</span>
+                       <span className="text-2xl font-black text-black dark:text-white tracking-tighter uppercase">Payable</span>
                        <span className="text-5xl font-black text-indigo-600 tracking-tighter">₹{total.toFixed(0)}</span>
                     </div>
                  </div>
               </div>
 
-              {/* Payment Details Column */}
+              {/* Payment Info Column (Right/Bottom) */}
               <div className="flex-1 p-8 md:p-14 space-y-10 bg-slate-50 dark:bg-slate-900/40 flex flex-col justify-center overflow-y-auto no-scrollbar">
                  <div className="space-y-10">
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 ml-4 block">Account Sync Email</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 ml-4 block">Account Email</label>
                       <input 
                         type="email" 
                         placeholder="ENTER PAYMENT EMAIL" 
@@ -477,7 +487,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
                         onChange={e => setEmail(e.target.value)}
                         required
                       />
-                      <p className="text-[9px] text-center font-black uppercase tracking-widest text-rose-600 animate-pulse">⚠️ Use this email to restore access anytime!</p>
+                      <p className="text-[9px] text-center font-black uppercase tracking-widest text-rose-600 animate-pulse">⚠️ Use this email to sync all purchases!</p>
                     </div>
 
                     <div className="space-y-4">
@@ -485,7 +495,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
                        <div className="p-8 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center gap-6 text-white shadow-xl relative cursor-pointer hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 group">
                           <span className="text-3xl">📱</span>
                           <span className="text-sm font-black uppercase tracking-widest">PhonePe / UPI / GPay</span>
-                          <div className="absolute -top-3 -right-3 bg-emerald-500 text-white text-[8px] px-3 py-1.5 rounded-full font-black animate-bounce shadow-lg">SECURE GATEWAY</div>
+                          <div className="absolute -top-3 -right-3 bg-emerald-500 text-white text-[8px] px-3 py-1.5 rounded-full font-black animate-bounce shadow-lg">FAST GATEWAY</div>
                        </div>
                     </div>
                  </div>
@@ -496,10 +506,10 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
                       onClick={handleFinalUnlock} 
                       className="w-full bg-rose-600 text-white py-10 rounded-[3rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-90 transition-all flex items-center justify-center gap-4"
                     >
-                      {isProcessing ? 'CONFIRMING...' : `PAY ₹${total.toFixed(0)}`}
+                      {isProcessing ? 'CONFIRMING...' : `PAY ₹${total.toFixed(0)} NOW`}
                       {isProcessing && <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>}
                     </button>
-                    <button onClick={() => setIsCheckoutOpen(false)} className="w-full text-[10px] font-black uppercase text-slate-400 tracking-[0.4em] hover:text-rose-600 transition-colors">Go Back to Selection</button>
+                    <button onClick={() => setIsCheckoutOpen(false)} className="w-full text-[10px] font-black uppercase text-slate-400 tracking-[0.4em] hover:text-rose-600 transition-colors">Go Back to selection</button>
                  </div>
               </div>
            </div>
@@ -517,19 +527,19 @@ const SubjectPage = ({ purchased }: { purchased: string[] }) => {
   if (!subject) return <div>Subject not found</div>;
 
   return (
-    <div className="p-8 md:p-16 max-w-7xl mx-auto space-y-20">
+    <div className="p-8 md:p-16 max-w-7xl mx-auto space-y-16">
       <header className="flex flex-col lg:flex-row items-center gap-12 border-b-4 border-slate-100 dark:border-slate-900 pb-16">
-        <div className="text-[10rem] md:text-[12rem] drop-shadow-2xl animate-in zoom-in duration-700 flex-shrink-0">{subject.icon}</div>
-        <div className="flex-1 text-center lg:text-left space-y-6">
-          <h2 className="text-6xl md:text-8xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.8]">{subject.name}</h2>
-          <div className="flex flex-wrap justify-center lg:justify-start gap-5 pt-2">
+        <div className="text-[10rem] drop-shadow-2xl animate-in zoom-in duration-700 flex-shrink-0">{subject.icon}</div>
+        <div className="flex-1 text-center lg:text-left space-y-4">
+          <h2 className="text-5xl md:text-6xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.8]">{subject.name}</h2>
+          <div className="flex flex-wrap justify-center lg:justify-start gap-4 pt-2">
             {isPurchased ? (
-              <Link to={`/vault/${id}`} className="bg-emerald-500 text-white px-12 py-4 rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center gap-3">
-                <span className="text-xl">✓</span> OPEN MASTER VAULT
+              <Link to={`/vault/${id}`} className="bg-emerald-500 text-white px-10 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center gap-3">
+                <span className="text-xl">✓</span> OPEN VAULT
               </Link>
             ) : (
-              <Link to="/premium" className="bg-rose-600 text-white px-12 py-4 rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl animate-pulse hover:scale-110 active:scale-95 transition-all flex items-center gap-3">
-                <span className="text-xl">💎</span> UNLOCK PREMIUM VAULT
+              <Link to="/premium" className="bg-rose-600 text-white px-10 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl animate-pulse hover:scale-110 active:scale-95 transition-all flex items-center gap-3">
+                <span className="text-xl">💎</span> UNLOCK PREMIUM
               </Link>
             )}
           </div>
@@ -537,17 +547,17 @@ const SubjectPage = ({ purchased }: { purchased: string[] }) => {
       </header>
 
       <div className="grid gap-10">
-        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-2">Detailed Chapter Notes</div>
+        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-2">Subject Master Notes</div>
         {subject.chapters.map((chapter, idx) => (
-          <div key={chapter.id} className="p-10 md:p-14 bg-white dark:bg-slate-900 rounded-[4rem] border-4 border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-10 shadow-xl hover:scale-[1.02] hover:border-indigo-600 transition-all duration-700 group">
+          <div key={chapter.id} className="p-10 md:p-12 bg-white dark:bg-slate-900 rounded-[3rem] border-4 border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-10 shadow-xl hover:scale-[1.02] hover:border-indigo-600 transition-all duration-700 group">
             <div className="flex-1 text-center md:text-left">
-              <span className="text-indigo-600 font-black text-5xl italic opacity-10 tracking-tighter group-hover:opacity-100 transition-opacity">CH {idx+1}</span>
-              <h3 className="text-3xl md:text-4xl font-black text-black dark:text-white uppercase tracking-tighter mt-3 leading-none">{chapter.title}</h3>
+              <span className="text-indigo-600 font-black text-4xl italic opacity-10 tracking-tighter group-hover:opacity-100 transition-opacity">CH {idx+1}</span>
+              <h3 className="text-2xl md:text-3xl font-black text-black dark:text-white uppercase tracking-tighter mt-3 leading-none">{chapter.title}</h3>
               <p className="text-lg font-bold text-slate-500 mt-4 leading-relaxed max-w-xl">{chapter.description}</p>
             </div>
             <div className="flex flex-wrap justify-center gap-4">
               {[...Array(chapter.totalParts)].map((_, i) => (
-                <Link key={i} to={`/chapter/${id}/${chapter.title}/${i + 1}/${chapter.totalParts}`} className="bg-slate-50 dark:bg-slate-800 text-black dark:text-white px-10 py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-inner hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all border-4 border-transparent hover:border-indigo-600 active:scale-90">Part {i+1}</Link>
+                <Link key={i} to={`/chapter/${id}/${chapter.title}/${i + 1}/${chapter.totalParts}`} className="bg-slate-50 dark:bg-slate-800 text-black dark:text-white px-8 py-5 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-inner hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all border-2 border-transparent hover:border-indigo-600 active:scale-90">Part {i+1}</Link>
               ))}
             </div>
           </div>
@@ -559,13 +569,13 @@ const SubjectPage = ({ purchased }: { purchased: string[] }) => {
 
 const Home = () => (
   <div className="p-10 md:p-20 max-w-7xl mx-auto space-y-20 animate-in fade-in slide-in-from-bottom-20 duration-1000">
-    <header className="text-center space-y-12 max-w-6xl mx-auto">
-      <div className="inline-block bg-indigo-600 text-white text-[12px] px-12 py-4 rounded-full font-black uppercase tracking-[0.5em] shadow-2xl mb-2 border-4 border-indigo-400">Class 12 Boards 2026 • AI MASTER</div>
-      <h1 className="text-7xl md:text-[11rem] font-black text-black dark:text-white tracking-tighter leading-[0.7] uppercase">Boards <br/><span className="text-indigo-600">Mastered.</span></h1>
+    <header className="text-center space-y-10 max-w-6xl mx-auto">
+      <div className="inline-block bg-indigo-600 text-white text-[12px] px-10 py-3 rounded-full font-black uppercase tracking-[0.5em] shadow-2xl mb-2">Class 12 Boards 2026 • AI MASTER</div>
+      <h1 className="text-6xl md:text-8xl font-black text-black dark:text-white tracking-tighter leading-[0.7] uppercase">Boards <br/><span className="text-indigo-600">Mastered.</span></h1>
       <p className="text-2xl md:text-3xl font-bold text-slate-500 max-w-4xl mx-auto leading-relaxed uppercase tracking-tight">AI-Generated Master Notes & The 50 Most Repeated Board Exam patterns. Simplified for the perfect 95%+ score.</p>
-      <div className="flex flex-wrap justify-center gap-10 pt-16">
-        <Link to="/subject/physics" className="bg-black text-white dark:bg-white dark:text-black px-20 py-8 rounded-[3rem] font-black text-sm uppercase tracking-[0.4em] shadow-2xl hover:scale-110 active:scale-95 transition-all border-8 border-transparent hover:border-indigo-600">Free Notes</Link>
-        <Link to="/premium" className="bg-rose-600 text-white px-20 py-8 rounded-[3rem] font-black text-sm uppercase tracking-[0.4em] shadow-2xl hover:scale-110 active:scale-95 transition-all relative overflow-hidden group">
+      <div className="flex flex-wrap justify-center gap-10 pt-12">
+        <Link to="/subject/physics" className="bg-black text-white dark:bg-white dark:text-black px-16 py-7 rounded-[2rem] font-black text-sm uppercase tracking-[0.4em] shadow-2xl hover:scale-110 active:scale-95 transition-all border-4 border-transparent hover:border-indigo-600">Free Notes</Link>
+        <Link to="/premium" className="bg-rose-600 text-white px-16 py-7 rounded-[2rem] font-black text-sm uppercase tracking-[0.4em] shadow-2xl hover:scale-110 active:scale-95 transition-all relative overflow-hidden group">
           <div className="absolute inset-0 bg-white/20 translate-y-[100%] group-hover:translate-y-[0] transition-transform duration-500"></div>
           <span className="relative z-10">THE VAULT</span>
         </Link>
