@@ -31,10 +31,10 @@ const FomoToast = () => {
   }, []);
 
   return (
-    <div className="fixed bottom-6 left-6 z-[200] no-print">
-      <div className="bg-white dark:bg-slate-900 border-2 border-indigo-600 p-5 rounded-[2rem] shadow-[0_25px_60px_rgba(79,70,229,0.4)] animate-bounce-slow flex items-center gap-4 max-w-xs transition-all border-l-8 border-l-indigo-600">
-        <div className="w-3 h-3 bg-emerald-500 rounded-full animate-ping"></div>
-        <p className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight leading-tight">
+    <div className="fixed top-24 right-6 z-[200] no-print pointer-events-none">
+      <div className="bg-white dark:bg-slate-900 border-2 border-indigo-600 p-4 rounded-2xl shadow-[0_20px_50px_rgba(79,70,229,0.3)] animate-bounce-slow flex items-center gap-3 max-w-[240px] transition-all border-l-8 border-l-indigo-600 pointer-events-auto">
+        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
+        <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight leading-tight">
           {messages[msgIdx]}
         </p>
       </div>
@@ -180,7 +180,7 @@ const VaultView = ({ purchased }: { purchased: string[] }) => {
       <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-12 p-10 text-center">
         <div className="text-9xl">🔒</div>
         <div className="space-y-6 max-w-2xl">
-          <h2 className="text-4xl md:text-6xl font-black text-black dark:text-white uppercase tracking-tighter">Vault Locked</h2>
+          <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white uppercase tracking-tighter">Vault Locked</h2>
           <p className="text-xl font-bold text-slate-500 uppercase">You need to unlock this subject from the Premium Portal to see these master questions.</p>
           <Link to="/premium" className="inline-block bg-rose-600 text-white px-16 py-6 rounded-[2.5rem] font-black uppercase text-sm tracking-widest shadow-2xl hover:scale-105 transition-all">Go to Premium Portal</Link>
         </div>
@@ -191,7 +191,7 @@ const VaultView = ({ purchased }: { purchased: string[] }) => {
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-12 p-10 text-center animate-pulse">
       <div className="text-[10rem] animate-bounce">💎</div>
-      <h2 className="text-4xl md:text-6xl font-black text-black dark:text-white uppercase tracking-tighter">Opening Elite Vault...</h2>
+      <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">Opening Elite Vault...</h2>
       <p className="text-slate-500 font-bold uppercase tracking-widest">Generating 50+ High-Performance Board Questions for {subject?.name}</p>
     </div>
   );
@@ -199,7 +199,7 @@ const VaultView = ({ purchased }: { purchased: string[] }) => {
   if (error) return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-8 p-10 text-center">
       <div className="text-9xl">⚠️</div>
-      <h2 className="text-3xl font-black text-black dark:text-white uppercase tracking-tighter">{error}</h2>
+      <h2 className="text-3xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">{error}</h2>
       <button onClick={() => window.location.reload()} className="bg-indigo-600 text-white px-12 py-5 rounded-2xl font-black uppercase tracking-widest">Retry Access</button>
     </div>
   );
@@ -277,7 +277,7 @@ const ChapterView = () => {
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-12 p-10 text-center animate-pulse">
       <div className="text-[10rem] animate-bounce-slow">📖</div>
-      <h2 className="text-4xl md:text-6xl font-black text-black dark:text-white uppercase tracking-tighter">Opening Chapter Files...</h2>
+      <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">Opening Chapter Files...</h2>
     </div>
   );
 
@@ -328,7 +328,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
 
   const handleFinalUnlock = () => {
     if (!email.includes('@')) { 
-      alert('⚠️ Critical: Valid email required to sync your permanent access.'); 
+      alert('⚠️ Critical: Enter a valid email to receive your permanent vault key.'); 
       return; 
     }
     const cleanEmail = email.toLowerCase().trim();
@@ -346,7 +346,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
       setIsProcessing(false);
       setIsCheckoutOpen(false);
       setCart([]);
-      alert(`🎉 PAYMENT SUCCESSFUL! Access to ${updatedPurchases.length} subjects is now linked to ${cleanEmail}.`);
+      alert(`🎉 PAYMENT SUCCESSFUL! ${updatedPurchases.length} subjects are now permanently linked to ${cleanEmail}. Check your subjects now!`);
       navigate('/');
     }, 2000);
   };
@@ -410,7 +410,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
            <div className="flex items-center gap-6">
               <div className="w-16 h-16 bg-rose-600 rounded-2xl flex items-center justify-center text-3xl shadow-2xl animate-pulse text-white">🛒</div>
               <div>
-                <div className="text-white font-black text-2xl uppercase tracking-tighter">{cart.length} SUBJECTS SELECTED</div>
+                <div className="text-white font-black text-2xl uppercase tracking-tighter leading-none">{cart.length} SUBJECTS SELECTED</div>
                 {discountLabel && <div className="text-emerald-400 font-black text-[10px] uppercase tracking-[0.2em] mt-1">✨ {discountLabel} SAVINGS APPLIED!</div>}
               </div>
            </div>
@@ -418,7 +418,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
            <div className="flex items-center gap-10">
               <div className="text-right">
                 <div className="text-slate-400 font-black text-[10px] uppercase tracking-widest mb-1">Total Payable</div>
-                <div className="text-white text-5xl font-black tracking-tighter">₹{total.toFixed(0)}</div>
+                <div className="text-white text-5xl font-black tracking-tighter leading-none">₹{total.toFixed(0)}</div>
               </div>
               <button 
                 onClick={() => setIsCheckoutOpen(true)} 
@@ -431,71 +431,80 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
       )}
 
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-[500] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
-           <div className="w-full max-w-5xl bg-white dark:bg-slate-950 rounded-[4rem] border-4 md:border-8 border-indigo-600 flex flex-col md:flex-row h-full max-h-[85vh] shadow-[0_50px_150px_rgba(0,0,0,0.8)] overflow-hidden relative">
+        <div className="fixed inset-0 z-[500] bg-black/90 backdrop-blur-2xl flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300">
+           <div className="w-full max-w-6xl bg-white dark:bg-slate-950 rounded-[4rem] border-4 md:border-8 border-indigo-600 flex flex-col md:flex-row h-full max-h-[90vh] shadow-[0_80px_160px_rgba(0,0,0,1)] overflow-hidden relative">
               
-              {/* Order Details Column (Left/Top) */}
-              <div className="flex-1 p-8 md:p-14 space-y-10 overflow-y-auto no-scrollbar border-b-4 md:border-b-0 md:border-r-4 border-slate-100 dark:border-slate-900">
-                 <div className="flex items-center justify-between border-b-4 pb-6 border-indigo-600">
-                   <h2 className="text-3xl font-black text-black dark:text-white uppercase tracking-tighter">Order Summary</h2>
-                   <button onClick={() => setIsCheckoutOpen(false)} className="bg-rose-50 text-rose-600 font-black uppercase text-[10px] px-4 py-2 rounded-xl border border-rose-200 hover:bg-rose-600 hover:text-white transition-all">Back</button>
+              {/* Order Info (Left Panel) */}
+              <div className="flex-[0.8] p-8 md:p-12 space-y-8 overflow-y-auto no-scrollbar border-b-4 md:border-b-0 md:border-r-4 border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950">
+                 <div className="flex items-center justify-between border-b-4 pb-4 border-indigo-600">
+                   <h2 className="text-3xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">Your Order</h2>
+                   <button onClick={() => setIsCheckoutOpen(false)} className="bg-rose-50 text-rose-600 font-black uppercase text-[10px] px-5 py-2 rounded-xl border border-rose-200 hover:bg-rose-600 hover:text-white transition-all">Back</button>
                  </div>
                  
-                 <div className="space-y-4 pt-4">
+                 <div className="space-y-4">
                     {cart.map(id => {
                        const s = SUBJECTS.find(subj => subj.id === id);
                        return (
-                         <div key={id} className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 shadow-sm">
+                         <div key={id} className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-900 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-4">
                                <span className="text-3xl">{s?.icon}</span>
-                               <span className="font-black text-sm text-black dark:text-white uppercase tracking-tight">{s?.name} Vault</span>
+                               <span className="font-black text-xs text-black dark:text-white uppercase tracking-tight">{s?.name} Premium</span>
                             </div>
-                            <span className="font-black text-xl text-indigo-600">₹29</span>
+                            <span className="font-black text-lg text-indigo-600">₹29</span>
                          </div>
                        );
                     })}
                  </div>
 
-                 <div className="space-y-4 pt-8 border-t-4 border-slate-100 dark:border-slate-900">
+                 <div className="pt-6 space-y-4 border-t-4 border-slate-100 dark:border-slate-900">
                     <div className="flex justify-between font-black uppercase text-[10px] tracking-widest text-slate-400">
-                       <span>Bag Subtotal</span>
+                       <span>Subtotal</span>
                        <span>₹{subtotal}</span>
                     </div>
                     {discountLabel && (
-                       <div className="flex justify-between font-black uppercase text-[10px] tracking-widest text-emerald-500 animate-pulse">
-                          <span>Special Discount ({discountLabel})</span>
+                       <div className="flex justify-between font-black uppercase text-[10px] tracking-widest text-emerald-500">
+                          <span>Bundle Discount ({discountLabel})</span>
                           <span>- ₹{discount.toFixed(0)}</span>
                        </div>
                     )}
                     <div className="flex justify-between items-center pt-6 border-t-4 border-slate-200 dark:border-slate-800">
-                       <span className="text-2xl font-black text-black dark:text-white tracking-tighter uppercase">Payable</span>
-                       <span className="text-5xl font-black text-indigo-600 tracking-tighter">₹{total.toFixed(0)}</span>
+                       <span className="text-2xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">Total</span>
+                       <span className="text-5xl font-black text-indigo-600 tracking-tighter leading-none">₹{total.toFixed(0)}</span>
                     </div>
                  </div>
               </div>
 
-              {/* Payment Info Column (Right/Bottom) */}
-              <div className="flex-1 p-8 md:p-14 space-y-10 bg-slate-50 dark:bg-slate-900/40 flex flex-col justify-center overflow-y-auto no-scrollbar">
-                 <div className="space-y-10">
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 ml-4 block">Account Email</label>
+              {/* Payment Detail (Right Panel) - MAKE EMAIL SUPER OBVIOUS */}
+              <div className="flex-1 p-8 md:p-14 space-y-12 bg-indigo-50/50 dark:bg-indigo-950/20 flex flex-col justify-center overflow-y-auto no-scrollbar">
+                 <div className="space-y-12">
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-4 mb-2">
+                        <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-black shadow-lg">1</div>
+                        <label className="text-xs font-black uppercase tracking-[0.4em] text-indigo-700 dark:text-indigo-300">Enter Email for Access</label>
+                      </div>
                       <input 
                         type="email" 
-                        placeholder="ENTER PAYMENT EMAIL" 
-                        className="w-full bg-white dark:bg-black border-4 border-slate-200 dark:border-slate-800 p-8 rounded-[2.5rem] font-black text-center text-black dark:text-white outline-none focus:border-indigo-600 text-xl shadow-xl transition-all"
+                        placeholder="example@gmail.com" 
+                        autoFocus
+                        className="w-full bg-white dark:bg-black border-4 border-indigo-200 dark:border-indigo-900 p-8 rounded-[3rem] font-black text-center text-black dark:text-white outline-none focus:border-indigo-600 text-2xl shadow-xl transition-all placeholder:opacity-30"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                         required
                       />
-                      <p className="text-[9px] text-center font-black uppercase tracking-widest text-rose-600 animate-pulse">⚠️ Use this email to sync all purchases!</p>
+                      <p className="text-[10px] text-center font-black uppercase tracking-widest text-rose-600 bg-rose-50 dark:bg-rose-900/20 py-3 rounded-2xl border border-rose-100 dark:border-rose-900 shadow-sm px-6">
+                        ⚠️ Pay using this email to unlock your vault immediately!
+                      </p>
                     </div>
 
-                    <div className="space-y-4">
-                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Payment Method</h4>
-                       <div className="p-8 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center gap-6 text-white shadow-xl relative cursor-pointer hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 group">
-                          <span className="text-3xl">📱</span>
-                          <span className="text-sm font-black uppercase tracking-widest">PhonePe / UPI / GPay</span>
-                          <div className="absolute -top-3 -right-3 bg-emerald-500 text-white text-[8px] px-3 py-1.5 rounded-full font-black animate-bounce shadow-lg">FAST GATEWAY</div>
+                    <div className="space-y-6">
+                       <div className="flex items-center gap-4 mb-2">
+                        <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-black shadow-lg">2</div>
+                        <h4 className="text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-[0.4em]">Choose Payment Method</h4>
+                       </div>
+                       <div className="p-8 bg-white dark:bg-black border-4 border-indigo-600 rounded-[3rem] flex items-center justify-center gap-6 text-black dark:text-white shadow-xl relative cursor-pointer hover:bg-indigo-600 hover:text-white transition-all hover:scale-105 active:scale-95 group">
+                          <span className="text-4xl group-hover:scale-125 transition-transform">📱</span>
+                          <span className="text-sm font-black uppercase tracking-widest">PhonePe / UPI / Google Pay</span>
+                          <div className="absolute -top-4 -right-2 bg-emerald-500 text-white text-[9px] px-4 py-2 rounded-full font-black animate-pulse shadow-xl border-2 border-white dark:border-black">SECURE GATEWAY</div>
                        </div>
                     </div>
                  </div>
@@ -504,12 +513,12 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
                     <button 
                       disabled={isProcessing}
                       onClick={handleFinalUnlock} 
-                      className="w-full bg-rose-600 text-white py-10 rounded-[3rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-90 transition-all flex items-center justify-center gap-4"
+                      className="w-full bg-rose-600 text-white py-12 rounded-[4rem] font-black text-3xl uppercase tracking-[0.2em] shadow-[0_40px_80px_rgba(225,29,72,0.4)] hover:scale-105 active:scale-90 transition-all flex items-center justify-center gap-4"
                     >
-                      {isProcessing ? 'CONFIRMING...' : `PAY ₹${total.toFixed(0)} NOW`}
+                      {isProcessing ? 'Processing Payment...' : `Confirm & Pay ₹${total.toFixed(0)}`}
                       {isProcessing && <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>}
                     </button>
-                    <button onClick={() => setIsCheckoutOpen(false)} className="w-full text-[10px] font-black uppercase text-slate-400 tracking-[0.4em] hover:text-rose-600 transition-colors">Go Back to selection</button>
+                    <button onClick={() => setIsCheckoutOpen(false)} className="w-full text-[10px] font-black uppercase text-slate-400 tracking-[0.4em] hover:text-rose-600 transition-colors">Cancel Payment</button>
                  </div>
               </div>
            </div>
@@ -534,12 +543,12 @@ const SubjectPage = ({ purchased }: { purchased: string[] }) => {
           <h2 className="text-5xl md:text-6xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.8]">{subject.name}</h2>
           <div className="flex flex-wrap justify-center lg:justify-start gap-4 pt-2">
             {isPurchased ? (
-              <Link to={`/vault/${id}`} className="bg-emerald-500 text-white px-10 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center gap-3">
-                <span className="text-xl">✓</span> OPEN VAULT
+              <Link to={`/vault/${id}`} className="bg-emerald-500 text-white px-12 py-5 rounded-[2rem] font-black text-sm uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(16,185,129,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center gap-4 border-4 border-emerald-400">
+                <span className="text-2xl animate-pulse">✓</span> OPEN PREMIUM VAULT
               </Link>
             ) : (
-              <Link to="/premium" className="bg-rose-600 text-white px-10 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl animate-pulse hover:scale-110 active:scale-95 transition-all flex items-center gap-3">
-                <span className="text-xl">💎</span> UNLOCK PREMIUM
+              <Link to="/premium" className="bg-rose-600 text-white px-12 py-5 rounded-[2rem] font-black text-sm uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(225,29,72,0.4)] animate-pulse hover:scale-110 active:scale-95 transition-all flex items-center gap-4 border-4 border-rose-400">
+                <span className="text-2xl">💎</span> UNLOCK PREMIUM VAULT
               </Link>
             )}
           </div>
@@ -547,7 +556,7 @@ const SubjectPage = ({ purchased }: { purchased: string[] }) => {
       </header>
 
       <div className="grid gap-10">
-        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-2">Subject Master Notes</div>
+        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-2">Detailed Notes Archive</div>
         {subject.chapters.map((chapter, idx) => (
           <div key={chapter.id} className="p-10 md:p-12 bg-white dark:bg-slate-900 rounded-[3rem] border-4 border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-10 shadow-xl hover:scale-[1.02] hover:border-indigo-600 transition-all duration-700 group">
             <div className="flex-1 text-center md:text-left">
