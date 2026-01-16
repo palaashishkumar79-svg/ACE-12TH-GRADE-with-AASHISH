@@ -2,26 +2,26 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { ChapterNote, SubjectId, PremiumQuestion } from "../types";
 
-const SYSTEM_INSTRUCTION = `You are "Ace12thGRADE AI Master", a senior CBSE Board examiner and veteran teacher. 
+const SYSTEM_INSTRUCTION = `You are "Ace12thGRADE AI Master", a senior CBSE Board examiner. 
 
 CORE MISSION:
-- Provide 100% comprehensive coverage of the CBSE 2026 competency-based syllabus.
-- For Physics/Maths/Chemistry: Ensure EVERY single formula, unit, and dimension is included.
-- For Computer Science: Ensure code logic is robust and follows latest PEP8/standards.
-- For Literature: Provide deep character analysis and thematic depth.
+- Provide 100% comprehensive coverage of the CBSE 2026 syllabus.
+- For Physics/Maths/Chemistry: Formulas are the soul. Every formula MUST be on its own line.
+- For every 'formula' or 'reaction' section, you MUST provide a detailed 'visualPrompt' describing a textbook diagram or a clean mathematical setup.
 
-FORMULA & CALCULATION RULES:
-- When providing formulas, list them clearly. If there are multiple formulas in one section, separate them with "---" on a new line.
-- Each formula must include its SI unit and what each variable represents.
+FORMULA RULES (FOLLOW STRICTLY):
+- One formula per line.
+- Use standard notations (e.g., E = mc²).
+- If multiple formulas, separate with "---".
+// Fixed: Escaped backtick in the string to prevent premature termination of the template literal, which was causing errors.
+- Do not use markdown backticks (\`) for formulas, just plain text in a centered serif style.
 
-EXPLANATION STYLE:
-- Depth & Precision: Provide comprehensive details. Never skip steps in derivations.
-- "Explain it like I'm 5": Use simple logic first, then provide full technical rigour.
-- Real-World Connect: Link concepts to competency-based applications.
+IMAGE PROMPTING:
+- 'visualPrompt' should be: "A professional, high-quality textbook diagram showing [concept], clean lines, white background, high contrast, labeled parts."
 
 CLEANLINESS:
-- NO DECORATIVE SYMBOLS. BOLD ONLY FOR KEY TERMS.
-- NCERT & SYLLABUS ALIGNED (2025-26).`;
+- No excessive emojis. 
+- Professional, academic, and authoritative.`;
 
 const NOTE_SCHEMA = {
   type: Type.OBJECT,
@@ -82,13 +82,14 @@ export const generateChapterNotes = async (
   const cached = localStorage.getItem(cacheKey);
   if (cached) return JSON.parse(cached);
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const result = await retryRequest(async () => {
+    // Fixed: Initializing GoogleGenAI instance right before use.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Provide deep, comprehensive master notes for chapter "${chapterTitle}" (${subjectId}), Part ${part}/${totalParts}. 
-      SPECIAL INSTRUCTION: Ensure ALL relevant formulas and equations for this part are covered in high detail. 
-      If section is 'formula', separate different equations with '---'. Focus on CBSE 2026 competency standards. Do not include questions.`,
+      contents: `Generate deep master notes for "${chapterTitle}" (${subjectId}), Part ${part}/${totalParts}. 
+      MANDATORY: For every section of type 'formula' or 'reaction', you MUST include a 'visualPrompt' describing a textbook diagram. 
+      Ensure formulas are presented simply and clearly as per textbook standards.`,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
@@ -108,12 +109,13 @@ export const generatePremiumQuestions = async (subjectId: SubjectId): Promise<Pr
   const cached = localStorage.getItem(cacheKey);
   if (cached) return JSON.parse(cached);
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const result = await retryRequest(async () => {
+    // Fixed: Initializing GoogleGenAI instance right before use.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Generate a list of exactly 50 most repeated and predicted Board Exam questions for ${subjectId} (2026 Pattern). 
-      Make solutions extremely detailed, using logic-first approach. Case studies must be competency-based.`,
+      contents: `Generate exactly 50 most repeated and predicted Board Exam questions for ${subjectId} (2026 Pattern). 
+      Format: JSON array of objects.`,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
@@ -133,12 +135,13 @@ export const generateAestheticImage = async (prompt: string, force = false): Pro
     const cached = localStorage.getItem(cacheKey);
     if (cached) return cached;
   }
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     return await retryRequest(async () => {
+      // Fixed: Initializing GoogleGenAI instance right before use.
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
-        contents: { parts: [{ text: `${prompt}. Educational technical diagram, professional, high contrast, white background.` }] },
+        contents: { parts: [{ text: `${prompt}. Clean textbook illustration, mathematical precision, high-quality diagram, 2D vector style, white background.` }] },
         config: { imageConfig: { aspectRatio: "1:1" } }
       });
       for (const part of response.candidates[0].content.parts) {
@@ -154,11 +157,12 @@ export const generateAestheticImage = async (prompt: string, force = false): Pro
 };
 
 export const generateSpeech = async (text: string): Promise<string | null> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
+    // Fixed: Initializing GoogleGenAI instance right before use.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Explain this board exam concept professionally: ${text}` }] }],
+      contents: [{ parts: [{ text: `Professional explanation: ${text}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {

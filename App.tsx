@@ -210,7 +210,7 @@ const VaultView = ({ purchased }: { purchased: string[] }) => {
         <div className="flex justify-center">
           <span className="bg-gradient-to-r from-emerald-500 to-indigo-600 text-white px-8 py-2 rounded-full font-black text-[10px] uppercase tracking-[0.4em] shadow-2xl animate-pulse">✓ ELITE ARCHIVE UNLOCKED</span>
         </div>
-        <h2 className="text-5xl md:text-6xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.8]">
+        <h2 className="text-4xl md:text-6xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.8]">
           {subject?.name} <span className="text-indigo-600">VAULT.</span>
         </h2>
         <p className="text-xl md:text-2xl font-bold text-slate-500 max-w-4xl mx-auto uppercase tracking-tighter leading-tight">Elite 50 most repeated Board Exam patterns solved with High-Yield step-by-step logic.</p>
@@ -430,19 +430,17 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
         </div>
       )}
 
-      {/* RE-ENGINEERED CHECKOUT MODAL WITH SCROLLING AND ACCESSIBLE EMAIL INPUT */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 z-[600] bg-black/90 backdrop-blur-3xl flex items-start justify-center overflow-y-auto pt-6 pb-20 px-4 animate-in fade-in duration-300">
            <div className="w-full max-w-6xl bg-white dark:bg-slate-950 rounded-[3rem] border-4 md:border-8 border-indigo-600 shadow-[0_80px_160px_rgba(0,0,0,1)] relative flex flex-col md:flex-row min-h-min max-h-none overflow-hidden">
               
-              {/* Payment Detail (Right Panel - MOVED TO TOP ON MOBILE, FIRST PRIORITY) */}
+              {/* Payment Detail (Right Panel - FIRST PRIORITY ON TOP) */}
               <div className="flex-1 order-1 md:order-2 p-8 md:p-14 space-y-10 bg-indigo-50/50 dark:bg-indigo-950/20 border-b-4 md:border-b-0 border-slate-100 dark:border-slate-800">
                  <div className="flex items-center justify-between mb-8">
                    <h2 className="text-2xl font-black text-indigo-900 dark:text-indigo-100 uppercase tracking-tighter">Step 2: Payment</h2>
                    <button onClick={() => setIsCheckoutOpen(false)} className="bg-rose-600 text-white font-black uppercase text-[9px] px-6 py-2 rounded-full shadow-lg">Close</button>
                  </div>
 
-                 {/* EMAIL INPUT - VERY VISIBLE AT TOP */}
                  <div className="space-y-4">
                     <label className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.3em] text-indigo-700 dark:text-indigo-400">
                       <span className="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px]">1</span>
@@ -487,7 +485,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
                  </div>
               </div>
 
-              {/* Order Info (Left Panel - SECONDARY ON MOBILE) */}
+              {/* Order Info (Left Panel) */}
               <div className="flex-[0.7] order-2 md:order-1 p-8 md:p-12 space-y-8 bg-white dark:bg-slate-950">
                  <h2 className="text-2xl font-black text-black dark:text-white uppercase tracking-tighter leading-none border-b-4 pb-4 border-slate-100 dark:border-slate-800">Step 1: Order Summary</h2>
                  
@@ -498,7 +496,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
                          <div key={id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-[1.5rem] border-2 border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-4">
                                <span className="text-3xl">{s?.icon}</span>
-                               <span className="font-black text-[10px] text-black dark:text-white uppercase tracking-tight">{s?.name} Master Vault</span>
+                               <span className="font-black text-[10px] text-black dark:text-white uppercase tracking-tight">{s?.name} Vault</span>
                             </div>
                             <span className="font-black text-lg text-indigo-600">₹29</span>
                          </div>
@@ -540,17 +538,17 @@ const SubjectPage = ({ purchased }: { purchased: string[] }) => {
   return (
     <div className="p-8 md:p-16 max-w-7xl mx-auto space-y-16">
       <header className="flex flex-col lg:flex-row items-center gap-12 border-b-4 border-slate-100 dark:border-slate-900 pb-16">
-        <div className="text-[10rem] drop-shadow-2xl animate-in zoom-in duration-700 flex-shrink-0">{subject.icon}</div>
+        <div className="text-[8rem] md:text-[10rem] drop-shadow-2xl animate-in zoom-in duration-700 flex-shrink-0">{subject.icon}</div>
         <div className="flex-1 text-center lg:text-left space-y-4">
-          <h2 className="text-5xl md:text-6xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.8]">{subject.name}</h2>
+          <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.8]">{subject.name} Master Files</h2>
           <div className="flex flex-wrap justify-center lg:justify-start gap-4 pt-2">
             {isPurchased ? (
-              <Link to={`/vault/${id}`} className="bg-emerald-500 text-white px-12 py-5 rounded-[2rem] font-black text-sm uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(16,185,129,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center gap-4 border-4 border-emerald-400">
-                <span className="text-2xl animate-pulse">✓</span> OPEN PREMIUM VAULT
+              <Link to={`/vault/${id}`} className="bg-emerald-500 text-white px-10 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center gap-3">
+                <span className="text-xl">✓</span> OPEN VAULT
               </Link>
             ) : (
-              <Link to="/premium" className="bg-rose-600 text-white px-12 py-5 rounded-[2rem] font-black text-sm uppercase tracking-[0.4em] shadow-[0_20px_40px_rgba(225,29,72,0.4)] animate-pulse hover:scale-110 active:scale-95 transition-all flex items-center gap-4 border-4 border-rose-400">
-                <span className="text-2xl">💎</span> UNLOCK PREMIUM VAULT
+              <Link to="/premium" className="bg-rose-600 text-white px-10 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl animate-pulse hover:scale-110 active:scale-95 transition-all flex items-center gap-3">
+                <span className="text-xl">💎</span> UNLOCK PREMIUM
               </Link>
             )}
           </div>
