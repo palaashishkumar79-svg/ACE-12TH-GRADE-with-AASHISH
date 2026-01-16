@@ -328,7 +328,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
 
   const handleFinalUnlock = () => {
     if (!email.includes('@')) { 
-      alert('⚠️ Critical: Enter a valid email to receive your permanent vault key.'); 
+      alert('⚠️ Please enter a valid email to link your permanent purchase.'); 
       return; 
     }
     const cleanEmail = email.toLowerCase().trim();
@@ -346,7 +346,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
       setIsProcessing(false);
       setIsCheckoutOpen(false);
       setCart([]);
-      alert(`🎉 PAYMENT SUCCESSFUL! ${updatedPurchases.length} subjects are now permanently linked to ${cleanEmail}. Check your subjects now!`);
+      alert(`🎉 SUCCESS! Subjects unlocked. Access is linked to ${cleanEmail}.`);
       navigate('/');
     }, 2000);
   };
@@ -430,25 +430,75 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
         </div>
       )}
 
+      {/* RE-ENGINEERED CHECKOUT MODAL WITH SCROLLING AND ACCESSIBLE EMAIL INPUT */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-[500] bg-black/90 backdrop-blur-2xl flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300">
-           <div className="w-full max-w-6xl bg-white dark:bg-slate-950 rounded-[4rem] border-4 md:border-8 border-indigo-600 flex flex-col md:flex-row h-full max-h-[90vh] shadow-[0_80px_160px_rgba(0,0,0,1)] overflow-hidden relative">
+        <div className="fixed inset-0 z-[600] bg-black/90 backdrop-blur-3xl flex items-start justify-center overflow-y-auto pt-6 pb-20 px-4 animate-in fade-in duration-300">
+           <div className="w-full max-w-6xl bg-white dark:bg-slate-950 rounded-[3rem] border-4 md:border-8 border-indigo-600 shadow-[0_80px_160px_rgba(0,0,0,1)] relative flex flex-col md:flex-row min-h-min max-h-none overflow-hidden">
               
-              {/* Order Info (Left Panel) */}
-              <div className="flex-[0.8] p-8 md:p-12 space-y-8 overflow-y-auto no-scrollbar border-b-4 md:border-b-0 md:border-r-4 border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950">
-                 <div className="flex items-center justify-between border-b-4 pb-4 border-indigo-600">
-                   <h2 className="text-3xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">Your Order</h2>
-                   <button onClick={() => setIsCheckoutOpen(false)} className="bg-rose-50 text-rose-600 font-black uppercase text-[10px] px-5 py-2 rounded-xl border border-rose-200 hover:bg-rose-600 hover:text-white transition-all">Back</button>
+              {/* Payment Detail (Right Panel - MOVED TO TOP ON MOBILE, FIRST PRIORITY) */}
+              <div className="flex-1 order-1 md:order-2 p-8 md:p-14 space-y-10 bg-indigo-50/50 dark:bg-indigo-950/20 border-b-4 md:border-b-0 border-slate-100 dark:border-slate-800">
+                 <div className="flex items-center justify-between mb-8">
+                   <h2 className="text-2xl font-black text-indigo-900 dark:text-indigo-100 uppercase tracking-tighter">Step 2: Payment</h2>
+                   <button onClick={() => setIsCheckoutOpen(false)} className="bg-rose-600 text-white font-black uppercase text-[9px] px-6 py-2 rounded-full shadow-lg">Close</button>
                  </div>
-                 
+
+                 {/* EMAIL INPUT - VERY VISIBLE AT TOP */}
                  <div className="space-y-4">
+                    <label className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.3em] text-indigo-700 dark:text-indigo-400">
+                      <span className="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px]">1</span>
+                      Your Sync Email (Required)
+                    </label>
+                    <input 
+                      type="email" 
+                      placeholder="ENTER YOUR GMAIL" 
+                      autoFocus
+                      className="w-full bg-white dark:bg-black border-4 border-indigo-200 dark:border-indigo-900 p-8 rounded-[2rem] font-black text-center text-black dark:text-white outline-none focus:border-indigo-600 text-2xl shadow-xl transition-all placeholder:opacity-40"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      required
+                    />
+                    <div className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200 p-4 rounded-2xl text-[10px] font-bold uppercase text-center border border-amber-200">
+                      ⚠️ Purchase will be linked to this email forever!
+                    </div>
+                 </div>
+
+                 <div className="space-y-4">
+                    <label className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.3em] text-indigo-700 dark:text-indigo-400">
+                      <span className="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px]">2</span>
+                      Scan or Use UPI
+                    </label>
+                    <div className="p-8 bg-white dark:bg-black border-4 border-indigo-600 rounded-[2rem] flex flex-col items-center gap-4 text-black dark:text-white shadow-xl group">
+                       <span className="text-4xl">📱</span>
+                       <span className="text-sm font-black uppercase tracking-widest text-center">PhonePe / UPI / GPay Active</span>
+                       <div className="w-full bg-emerald-500 text-white text-[9px] py-2 rounded-xl font-black text-center animate-pulse">SECURE ENCRYPTED GATEWAY</div>
+                    </div>
+                 </div>
+
+                 <div className="pt-8 space-y-6">
+                    <button 
+                      disabled={isProcessing}
+                      onClick={handleFinalUnlock} 
+                      className="w-full bg-rose-600 text-white py-10 rounded-[3rem] font-black text-3xl uppercase tracking-[0.2em] shadow-[0_30px_60px_rgba(225,29,72,0.4)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4"
+                    >
+                      {isProcessing ? 'CONFIRMING...' : `PAY ₹${total.toFixed(0)} NOW`}
+                      {isProcessing && <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>}
+                    </button>
+                    <button onClick={() => setIsCheckoutOpen(false)} className="w-full text-[9px] font-black uppercase text-slate-400 tracking-[0.5em] hover:text-rose-600 text-center">Go back to cart</button>
+                 </div>
+              </div>
+
+              {/* Order Info (Left Panel - SECONDARY ON MOBILE) */}
+              <div className="flex-[0.7] order-2 md:order-1 p-8 md:p-12 space-y-8 bg-white dark:bg-slate-950">
+                 <h2 className="text-2xl font-black text-black dark:text-white uppercase tracking-tighter leading-none border-b-4 pb-4 border-slate-100 dark:border-slate-800">Step 1: Order Summary</h2>
+                 
+                 <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
                     {cart.map(id => {
                        const s = SUBJECTS.find(subj => subj.id === id);
                        return (
-                         <div key={id} className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-900 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800">
+                         <div key={id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-[1.5rem] border-2 border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-4">
                                <span className="text-3xl">{s?.icon}</span>
-                               <span className="font-black text-xs text-black dark:text-white uppercase tracking-tight">{s?.name} Premium</span>
+                               <span className="font-black text-[10px] text-black dark:text-white uppercase tracking-tight">{s?.name} Master Vault</span>
                             </div>
                             <span className="font-black text-lg text-indigo-600">₹29</span>
                          </div>
@@ -457,68 +507,20 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
                  </div>
 
                  <div className="pt-6 space-y-4 border-t-4 border-slate-100 dark:border-slate-900">
-                    <div className="flex justify-between font-black uppercase text-[10px] tracking-widest text-slate-400">
-                       <span>Subtotal</span>
+                    <div className="flex justify-between font-black uppercase text-[10px] tracking-widest text-slate-400 px-2">
+                       <span>Bag Subtotal</span>
                        <span>₹{subtotal}</span>
                     </div>
                     {discountLabel && (
-                       <div className="flex justify-between font-black uppercase text-[10px] tracking-widest text-emerald-500">
-                          <span>Bundle Discount ({discountLabel})</span>
+                       <div className="flex justify-between font-black uppercase text-[10px] tracking-widest text-emerald-500 px-2 animate-pulse">
+                          <span>Bundle Offer ({discountLabel})</span>
                           <span>- ₹{discount.toFixed(0)}</span>
                        </div>
                     )}
-                    <div className="flex justify-between items-center pt-6 border-t-4 border-slate-200 dark:border-slate-800">
-                       <span className="text-2xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">Total</span>
+                    <div className="flex justify-between items-center pt-6 border-t-4 border-slate-200 dark:border-slate-800 px-2">
+                       <span className="text-xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">TOTAL PAYABLE</span>
                        <span className="text-5xl font-black text-indigo-600 tracking-tighter leading-none">₹{total.toFixed(0)}</span>
                     </div>
-                 </div>
-              </div>
-
-              {/* Payment Detail (Right Panel) - MAKE EMAIL SUPER OBVIOUS */}
-              <div className="flex-1 p-8 md:p-14 space-y-12 bg-indigo-50/50 dark:bg-indigo-950/20 flex flex-col justify-center overflow-y-auto no-scrollbar">
-                 <div className="space-y-12">
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-4 mb-2">
-                        <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-black shadow-lg">1</div>
-                        <label className="text-xs font-black uppercase tracking-[0.4em] text-indigo-700 dark:text-indigo-300">Enter Email for Access</label>
-                      </div>
-                      <input 
-                        type="email" 
-                        placeholder="example@gmail.com" 
-                        autoFocus
-                        className="w-full bg-white dark:bg-black border-4 border-indigo-200 dark:border-indigo-900 p-8 rounded-[3rem] font-black text-center text-black dark:text-white outline-none focus:border-indigo-600 text-2xl shadow-xl transition-all placeholder:opacity-30"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        required
-                      />
-                      <p className="text-[10px] text-center font-black uppercase tracking-widest text-rose-600 bg-rose-50 dark:bg-rose-900/20 py-3 rounded-2xl border border-rose-100 dark:border-rose-900 shadow-sm px-6">
-                        ⚠️ Pay using this email to unlock your vault immediately!
-                      </p>
-                    </div>
-
-                    <div className="space-y-6">
-                       <div className="flex items-center gap-4 mb-2">
-                        <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-black shadow-lg">2</div>
-                        <h4 className="text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-[0.4em]">Choose Payment Method</h4>
-                       </div>
-                       <div className="p-8 bg-white dark:bg-black border-4 border-indigo-600 rounded-[3rem] flex items-center justify-center gap-6 text-black dark:text-white shadow-xl relative cursor-pointer hover:bg-indigo-600 hover:text-white transition-all hover:scale-105 active:scale-95 group">
-                          <span className="text-4xl group-hover:scale-125 transition-transform">📱</span>
-                          <span className="text-sm font-black uppercase tracking-widest">PhonePe / UPI / Google Pay</span>
-                          <div className="absolute -top-4 -right-2 bg-emerald-500 text-white text-[9px] px-4 py-2 rounded-full font-black animate-pulse shadow-xl border-2 border-white dark:border-black">SECURE GATEWAY</div>
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="space-y-6">
-                    <button 
-                      disabled={isProcessing}
-                      onClick={handleFinalUnlock} 
-                      className="w-full bg-rose-600 text-white py-12 rounded-[4rem] font-black text-3xl uppercase tracking-[0.2em] shadow-[0_40px_80px_rgba(225,29,72,0.4)] hover:scale-105 active:scale-90 transition-all flex items-center justify-center gap-4"
-                    >
-                      {isProcessing ? 'Processing Payment...' : `Confirm & Pay ₹${total.toFixed(0)}`}
-                      {isProcessing && <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>}
-                    </button>
-                    <button onClick={() => setIsCheckoutOpen(false)} className="w-full text-[10px] font-black uppercase text-slate-400 tracking-[0.4em] hover:text-rose-600 transition-colors">Cancel Payment</button>
                  </div>
               </div>
            </div>
