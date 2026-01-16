@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { HashRouter, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
-import { SUBJECTS, OWNER_EMAIL } from './constants';
-import { ChapterNote, SubjectId, Transaction, PremiumQuestion, AppSettings, UserProfile } from './types';
+import React, { useState, useEffect, useRef } from 'react';
+import { HashRouter, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { SUBJECTS } from './constants';
+import { ChapterNote, SubjectId, PremiumQuestion, AppSettings, UserProfile } from './types';
 import { generateChapterNotes, generatePremiumQuestions } from './services/geminiService';
 import NoteRenderer, { FormattedText } from './components/NoteRenderer';
 
@@ -16,13 +16,53 @@ const DEFAULT_SETTINGS: AppSettings = {
   isVaultOpen: true
 };
 
+const BackButton = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  if (location.pathname === '/') return null;
+
+  return (
+    <div className="no-print mb-8 flex items-center gap-4">
+      <button 
+        onClick={() => {
+          if (window.history.length > 1) navigate(-1);
+          else navigate('/');
+        }}
+        className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors group"
+      >
+        <div className="w-10 h-10 rounded-full border-2 border-slate-200 group-hover:border-indigo-600 flex items-center justify-center transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path></svg>
+        </div>
+        <span className="font-black text-[10px] uppercase tracking-widest">Go Back</span>
+      </button>
+      <Link to="/" className="w-10 h-10 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-600 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V120A15.87,15.87,0,0,0,219.31,108.68ZM208,216H160V160a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"></path></svg>
+      </Link>
+    </div>
+  );
+};
+
+const MobileHeader = ({ user }: { user: UserProfile | null }) => (
+  <header className="lg:hidden no-print h-16 bg-white dark:bg-slate-950 border-b-2 border-slate-100 dark:border-slate-900 px-6 flex items-center justify-between sticky top-0 z-[100] shadow-sm">
+    <Link to="/" className="flex items-center gap-2">
+      <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-black text-sm">A</div>
+      <span className="font-black text-[10px] uppercase tracking-widest dark:text-white">Ace12th</span>
+    </Link>
+    <div className="flex items-center gap-3">
+      <Link to="/login" className="text-[9px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-3 py-1.5 rounded-full">Sync</Link>
+      <Link to="/premium" className="text-[9px] font-black text-white bg-rose-600 px-3 py-1.5 rounded-full">Vault</Link>
+    </div>
+  </header>
+);
+
 const FomoToast = () => {
   const [msgIdx, setMsgIdx] = useState(0);
   const messages = [
-    "⚠️ Price rising to ₹99 in 12 hours!",
-    "🚀 8,400+ students already unlocked the Vault",
-    "💎 30% ALL-SUBJECT BUNDLE active now!",
-    "🔥 Success Story: Rahul scored 98% using these PYQs"
+    "⚠️ Price rising to ₹99 soon!",
+    "🚀 8,400+ students already in",
+    "💎 30% BUNDLE discount active!",
+    "🔥 Success: Rahul scored 98% with AI Notes"
   ];
 
   useEffect(() => {
@@ -31,8 +71,8 @@ const FomoToast = () => {
   }, []);
 
   return (
-    <div className="fixed top-24 right-6 z-[200] no-print pointer-events-none">
-      <div className="bg-white dark:bg-slate-900 border-2 border-indigo-600 p-4 rounded-2xl shadow-[0_20px_50px_rgba(79,70,229,0.3)] animate-bounce-slow flex items-center gap-3 max-w-[240px] transition-all border-l-8 border-l-indigo-600 pointer-events-auto">
+    <div className="fixed top-24 right-6 z-[200] no-print pointer-events-none hidden md:block">
+      <div className="bg-white dark:bg-slate-900 border-2 border-indigo-600 p-4 rounded-2xl shadow-[0_20px_50px_rgba(79,70,229,0.3)] animate-bounce-slow flex items-center gap-3 max-w-[220px] pointer-events-auto transition-all">
         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
         <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight leading-tight">
           {messages[msgIdx]}
@@ -41,15 +81,6 @@ const FomoToast = () => {
     </div>
   );
 };
-
-const DarkModeToggle = ({ isDark, setIsDark }: { isDark: boolean, setIsDark: (v: boolean) => void }) => (
-  <button 
-    onClick={() => setIsDark(!isDark)}
-    className="px-6 py-3 rounded-2xl bg-black dark:bg-white text-white dark:text-black hover:scale-105 transition-all font-black text-[10px] shadow-xl uppercase tracking-widest border-2 border-slate-300 dark:border-slate-700"
-  >
-    {isDark ? 'LIGHT MODE' : 'DARK MODE'}
-  </button>
-);
 
 const Sidebar = ({ isDark, setIsDark, user, onLogout }: { isDark: boolean, setIsDark: (v: boolean) => void, user: UserProfile | null, onLogout: () => void }) => (
   <aside className="no-print w-80 bg-white dark:bg-slate-950 border-r-4 border-slate-100 dark:border-slate-900 h-screen sticky top-0 hidden lg:flex flex-col shadow-2xl z-50">
@@ -60,10 +91,7 @@ const Sidebar = ({ isDark, setIsDark, user, onLogout }: { isDark: boolean, setIs
       </Link>
       
       {user ? (
-        <div className="w-full bg-slate-50 dark:bg-slate-900 p-6 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 mb-6 text-center shadow-inner">
-          <div className="flex justify-center mb-3">
-            <div className="bg-emerald-500 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest animate-pulse">Sync Active</div>
-          </div>
+        <div className="w-full bg-slate-50 dark:bg-slate-900 p-6 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 mb-6 text-center">
           <div className="text-xs font-black text-black dark:text-white truncate mb-2">{user.email}</div>
           <button onClick={onLogout} className="text-[10px] font-black text-rose-600 uppercase tracking-widest hover:underline">Log Out</button>
         </div>
@@ -73,24 +101,26 @@ const Sidebar = ({ isDark, setIsDark, user, onLogout }: { isDark: boolean, setIs
         </Link>
       )}
 
-      <DarkModeToggle isDark={isDark} setIsDark={setIsDark} />
+      <button 
+        onClick={() => setIsDark(!isDark)}
+        className="px-6 py-3 rounded-2xl bg-black dark:bg-white text-white dark:text-black hover:scale-105 transition-all font-black text-[10px] shadow-xl uppercase tracking-widest border-2 border-slate-300 dark:border-slate-700 w-full"
+      >
+        {isDark ? 'LIGHT MODE' : 'DARK MODE'}
+      </button>
     </div>
     
-    <nav className="flex-1 overflow-y-auto px-8 space-y-4 no-scrollbar">
-      <div className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.4em] mb-6 px-2">Syllabus</div>
+    <nav className="flex-1 overflow-y-auto px-8 space-y-4 no-scrollbar pb-10">
+      <div className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.4em] mb-6 px-2">Subjects</div>
       {SUBJECTS.map(subject => (
         <Link key={subject.id} to={`/subject/${subject.id}`} className="flex items-center space-x-4 p-5 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 text-black dark:text-white font-black transition-all group border-2 border-transparent hover:border-indigo-600">
           <span className="text-3xl group-hover:scale-110 transition-transform">{subject.icon}</span>
           <span className="text-[11px] uppercase tracking-widest leading-none">{subject.name}</span>
         </Link>
       ))}
-      <div className="pt-10 text-[10px] font-black text-rose-600 uppercase tracking-[0.4em] mb-6 px-2">Premium Exclusive</div>
-      <Link to="/premium" className="flex items-center justify-between p-6 rounded-3xl bg-rose-600 text-white font-black border-2 border-rose-700 hover:scale-[1.02] transition-all shadow-2xl relative overflow-hidden group">
-        <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-        <div className="flex items-center space-x-4 relative z-10">
-          <span className="text-3xl">💎</span>
-          <span className="text-xs uppercase tracking-widest leading-none">THE VAULT</span>
-        </div>
+      <div className="pt-10 text-[10px] font-black text-rose-600 uppercase tracking-[0.4em] mb-6 px-2">Premium</div>
+      <Link to="/premium" className="flex items-center space-x-4 p-6 rounded-3xl bg-rose-600 text-white font-black border-2 border-rose-700 hover:scale-[1.02] transition-all shadow-xl">
+        <span className="text-3xl">💎</span>
+        <span className="text-xs uppercase tracking-widest leading-none">THE VAULT</span>
       </Link>
     </nav>
   </aside>
@@ -104,36 +134,33 @@ const Login = ({ onLogin }: { onLogin: (email: string) => void }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = email.toLowerCase().trim();
-    if (!cleanEmail.includes('@')) { alert('Please enter a valid email.'); return; }
-    
+    if (!cleanEmail.includes('@')) { alert('Enter valid email.'); return; }
     setLoading(true);
+    // Simulate server sync
     setTimeout(() => {
       onLogin(cleanEmail);
       setLoading(false);
       navigate('/');
-    }, 1500);
+    }, 1200);
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[90vh] p-6 animate-in fade-in duration-500">
-      <div className="bg-white dark:bg-slate-900 p-12 md:p-20 rounded-[4rem] border-4 border-slate-100 dark:border-slate-800 shadow-2xl max-w-xl w-full text-center space-y-10">
-        <div className="w-24 h-24 bg-indigo-600 text-white rounded-[2rem] flex items-center justify-center font-black mx-auto text-4xl shadow-2xl">A12</div>
+    <div className="p-8 md:p-16 max-w-4xl mx-auto">
+      <BackButton />
+      <div className="bg-white dark:bg-slate-900 p-10 md:p-20 rounded-[4rem] border-4 border-slate-100 dark:border-slate-800 shadow-2xl text-center space-y-10">
+        <div className="w-20 h-20 bg-indigo-600 text-white rounded-[1.5rem] flex items-center justify-center font-black mx-auto text-3xl shadow-xl">A12</div>
         <div className="space-y-4">
-          <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">Access Recovery</h2>
-          <p className="text-slate-500 font-bold">Log in with your payment email to restore all your subjects.</p>
+          <h2 className="text-4xl font-black text-black dark:text-white uppercase tracking-tighter">Vault Sync</h2>
+          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Restore content purchased with your email address.</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <input 
-            type="email" 
-            placeholder="YOUR PAYMENT EMAIL" 
-            className="w-full bg-slate-50 dark:bg-slate-950 border-4 border-slate-100 dark:border-slate-800 p-7 rounded-[2rem] font-black text-center text-black dark:text-white text-lg transition-all focus:border-indigo-600 outline-none"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            disabled={loading}
-            required
+            type="email" placeholder="EMAIL USED FOR PURCHASE" 
+            className="w-full bg-slate-50 dark:bg-black border-4 border-slate-100 dark:border-slate-800 p-6 rounded-[2rem] font-black text-center text-black dark:text-white transition-all focus:border-indigo-600 outline-none"
+            value={email} onChange={e => setEmail(e.target.value)} required
           />
-          <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white py-7 rounded-[2.2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all">
-            {loading ? 'RESTORING...' : 'SYNC PREVIOUS ACCESS'}
+          <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all">
+            {loading ? 'SYNCING...' : 'RE-ACCESS MY CONTENT'}
           </button>
         </form>
       </div>
@@ -142,118 +169,73 @@ const Login = ({ onLogin }: { onLogin: (email: string) => void }) => {
 };
 
 const VaultView = ({ purchased }: { purchased: string[] }) => {
-  const { subjectId } = useParams<{ subjectId: SubjectId }>();
+  const { subjectId } = useParams<{ subjectId: string }>();
   const [questions, setQuestions] = useState<PremiumQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Double-check access using both props and immediate localStorage check for sync reliability
+  const currentPurchased = [...purchased, ...JSON.parse(localStorage.getItem(PURCHASE_KEY) || '[]')];
+  const isUnlocked = currentPurchased.includes(subjectId as string);
   const subject = SUBJECTS.find(s => s.id === subjectId);
-  const isUnlocked = purchased.includes(subjectId as string);
 
   useEffect(() => {
-    if (!isUnlocked) {
-      setLoading(false);
-      return;
-    }
-
+    if (!isUnlocked || !subjectId) { setLoading(false); return; }
     const fetchVault = async () => {
-      setLoading(true);
-      setError(null);
+      setLoading(true); setError(null);
       try {
         const data = await generatePremiumQuestions(subjectId as SubjectId);
-        if (data && data.length > 0) {
-          setQuestions(data);
-        } else {
-          setError("Failed to fetch premium content. Please refresh.");
-        }
-      } catch (err) { 
-        console.error(err); 
-        setError("AI server is busy. Please try again in a moment.");
-      } finally { 
-        setLoading(false); 
-      }
+        setQuestions(data || []);
+      } catch (err) { setError("AI Server busy. Please refresh."); } finally { setLoading(false); }
     };
     fetchVault();
   }, [subjectId, isUnlocked]);
 
   if (!isUnlocked) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-12 p-10 text-center">
+      <div className="p-8 md:p-16 text-center space-y-8">
+        <BackButton />
         <div className="text-9xl">🔒</div>
-        <div className="space-y-6 max-w-2xl">
-          <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white uppercase tracking-tighter">Vault Locked</h2>
-          <p className="text-xl font-bold text-slate-500 uppercase">You need to unlock this subject from the Premium Portal to see these master questions.</p>
-          <Link to="/premium" className="inline-block bg-rose-600 text-white px-16 py-6 rounded-[2.5rem] font-black uppercase text-sm tracking-widest shadow-2xl hover:scale-105 transition-all">Go to Premium Portal</Link>
+        <h2 className="text-4xl font-black uppercase tracking-tighter dark:text-white">Vault Locked</h2>
+        <p className="text-slate-500 uppercase font-black text-xs max-w-lg mx-auto leading-relaxed">This archive contains predicted 2026 board questions. Sync your account or buy access to view.</p>
+        <div className="flex flex-col gap-4 max-w-xs mx-auto">
+          <Link to="/premium" className="bg-rose-600 text-white px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">Unlock for ₹29</Link>
+          <Link to="/login" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Already Bought? Sync Email</Link>
         </div>
       </div>
     );
   }
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-12 p-10 text-center animate-pulse">
-      <div className="text-[10rem] animate-bounce">💎</div>
-      <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">Opening Elite Vault...</h2>
-      <p className="text-slate-500 font-bold uppercase tracking-widest">Generating 50+ High-Performance Board Questions for {subject?.name}</p>
-    </div>
-  );
-
-  if (error) return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-8 p-10 text-center">
-      <div className="text-9xl">⚠️</div>
-      <h2 className="text-3xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">{error}</h2>
-      <button onClick={() => window.location.reload()} className="bg-indigo-600 text-white px-12 py-5 rounded-2xl font-black uppercase tracking-widest">Retry Access</button>
+    <div className="min-h-screen flex flex-col items-center justify-center p-10 text-center space-y-10 animate-pulse">
+      <div className="text-9xl">💎</div>
+      <h2 className="text-4xl font-black uppercase tracking-tighter dark:text-white">Analyzing Archives...</h2>
+      <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Generating 50+ predicted patterns for {subject?.name}</p>
     </div>
   );
 
   return (
-    <div className="p-8 md:p-16 max-w-7xl mx-auto space-y-20 animate-in fade-in duration-700">
-      <header className="text-center space-y-8">
-        <div className="flex justify-center">
-          <span className="bg-gradient-to-r from-emerald-500 to-indigo-600 text-white px-8 py-2 rounded-full font-black text-[10px] uppercase tracking-[0.4em] shadow-2xl animate-pulse">✓ ELITE ARCHIVE UNLOCKED</span>
-        </div>
-        <h2 className="text-4xl md:text-6xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.8]">
-          {subject?.name} <span className="text-indigo-600">VAULT.</span>
-        </h2>
-        <p className="text-xl md:text-2xl font-bold text-slate-500 max-w-4xl mx-auto uppercase tracking-tighter leading-tight">Elite 50 most repeated Board Exam patterns solved with High-Yield step-by-step logic.</p>
+    <div className="p-6 md:p-16 max-w-7xl mx-auto space-y-12">
+      <BackButton />
+      <header className="text-center space-y-6">
+        <span className="bg-emerald-500 text-white px-6 py-1.5 rounded-full font-black text-[9px] uppercase tracking-widest">PREMIUM ARCHIVE UNLOCKED</span>
+        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter dark:text-white">{subject?.name} <span className="text-indigo-600">VAULT.</span></h2>
       </header>
-
-      <div className="grid gap-16">
+      <div className="grid gap-12">
         {questions.map((q, idx) => (
-          <div key={idx} className="bg-white dark:bg-slate-900 p-10 md:p-16 rounded-[4rem] border-[4px] border-slate-100 dark:border-slate-800 shadow-[0_40px_80px_rgba(0,0,0,0.06)] relative group hover:border-indigo-600 transition-all duration-700 overflow-hidden">
-            <div className="absolute -right-8 -top-8 text-[14rem] opacity-5 font-black italic select-none group-hover:opacity-10 transition-opacity">#{idx+1}</div>
-            
-            <div className="flex flex-wrap gap-4 mb-10 items-center relative z-10">
-              <span className="bg-indigo-600 text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-lg">{q.type || 'EXAM PATTERN'}</span>
-              <div className="flex gap-2">
-                {q.repeatedYears.map(year => <span key={year} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-black px-4 py-1.5 rounded-full border border-emerald-100 dark:border-emerald-800 uppercase tracking-widest">{year}</span>) }
-              </div>
-              <span className="ml-auto bg-amber-100 text-amber-700 text-[9px] font-black px-5 py-1.5 rounded-full uppercase tracking-widest">Priority Score: {q.freqencyScore || 9.5}/10</span>
+          <div key={idx} className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[3rem] border-4 border-slate-100 dark:border-slate-800 shadow-xl relative overflow-hidden group">
+            <div className="absolute right-[-40px] top-[-40px] text-[12rem] opacity-[0.03] font-black italic select-none">#{idx+1}</div>
+            <div className="flex flex-wrap gap-3 mb-8 relative z-10">
+              <span className="bg-indigo-600 text-white text-[9px] font-black px-5 py-1.5 rounded-full uppercase tracking-widest">{q.type}</span>
+              {q.repeatedYears.map(y => <span key={y} className="bg-slate-100 dark:bg-slate-800 text-slate-500 text-[8px] font-black px-3 py-1 rounded-full uppercase">{y}</span>)}
             </div>
-
-            <h3 className="text-2xl md:text-4xl font-black text-black dark:text-white mb-12 leading-[1.1] tracking-tighter relative z-10">{q.question}</h3>
-            
-            <div className="relative z-10">
-               <div className="bg-indigo-50 dark:bg-indigo-950/40 p-8 md:p-14 rounded-[3.5rem] border-4 border-indigo-600 shadow-inner relative group-hover:bg-indigo-600/5 transition-colors">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg">AI</div>
-                    <h4 className="text-[12px] font-black uppercase tracking-[0.4em] text-indigo-600 dark:text-indigo-400">ELITE MASTER SOLUTION</h4>
-                  </div>
-                  <FormattedText text={q.solution} className="text-black dark:text-white text-2xl md:text-3xl font-bold leading-[1.6]" />
-                  <div className="mt-12 pt-8 border-t-2 border-indigo-200 dark:border-indigo-800 flex items-center justify-between text-[11px] font-black text-indigo-400 uppercase tracking-widest">
-                    <span>• Optimized for Full Marks</span>
-                    <span>Verified High-Yield AI Master •</span>
-                  </div>
-               </div>
+            <h3 className="text-2xl md:text-3xl font-black mb-8 leading-tight tracking-tight dark:text-white relative z-10">{q.question}</h3>
+            <div className="bg-indigo-50 dark:bg-indigo-950/40 p-8 rounded-[2rem] border-2 border-indigo-100 dark:border-indigo-900">
+               <FormattedText text={q.solution} className="text-lg md:text-xl font-bold dark:text-white leading-relaxed" />
             </div>
           </div>
         ))}
       </div>
-
-      <footer className="no-print mt-24 p-16 bg-black dark:bg-white rounded-[4rem] text-center space-y-8 shadow-2xl relative overflow-hidden group">
-         <div className="absolute inset-0 bg-indigo-600 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-700 opacity-20"></div>
-         <h4 className="text-white dark:text-black text-4xl font-black uppercase tracking-tighter relative z-10">Mastered this subject?</h4>
-         <p className="text-slate-400 dark:text-slate-500 font-bold max-w-2xl mx-auto uppercase text-xs tracking-[0.2em] leading-relaxed relative z-10">Don't risk your score. Unlock the Full 6-Subject Vault now to secure your 95%+ result across the board.</p>
-         <Link to="/premium" className="inline-block bg-rose-600 text-white px-16 py-6 rounded-[2rem] font-black uppercase text-xs tracking-[0.3em] hover:scale-110 active:scale-95 shadow-2xl transition-all relative z-10">Explore All Vaults</Link>
-      </footer>
     </div>
   );
 };
@@ -275,13 +257,18 @@ const ChapterView = () => {
   }, [subjectId, title, part, total]);
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-12 p-10 text-center animate-pulse">
-      <div className="text-[10rem] animate-bounce-slow">📖</div>
-      <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">Opening Chapter Files...</h2>
+    <div className="min-h-screen flex flex-col items-center justify-center p-10 text-center animate-pulse">
+      <div className="text-8xl mb-8">📖</div>
+      <h2 className="text-3xl font-black uppercase tracking-tighter dark:text-white">Assembling Master Notes...</h2>
     </div>
   );
 
-  return note ? <NoteRenderer note={note} /> : <div className="p-20 text-center font-black">Load Error</div>;
+  return (
+    <div className="p-4 md:p-10">
+      <BackButton />
+      {note ? <NoteRenderer note={note} /> : <div className="p-20 text-center font-black">Error loading content.</div>}
+    </div>
+  );
 };
 
 const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: AppSettings, setPurchased: React.Dispatch<React.SetStateAction<string[]>>, purchased: string[], user: UserProfile | null }) => {
@@ -291,16 +278,6 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Prevent background scroll when modal is open
-  useEffect(() => {
-    if (isCheckoutOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isCheckoutOpen]);
-
   const toggleCart = (id: string) => {
     setCart(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
   };
@@ -308,219 +285,143 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
   const calculateTotal = () => {
     const baseTotal = cart.length * settings.premiumPrice;
     let discountPercent = 0;
-    
-    if (cart.length === 6) {
-      discountPercent = 0.30; 
-    } else if (cart.length >= 3) {
-      discountPercent = 0.20; 
-    }
+    if (cart.length === 6) discountPercent = 0.30; 
+    else if (cart.length >= 3) discountPercent = 0.20; 
     
     const discountAmount = baseTotal * discountPercent;
     return {
       subtotal: baseTotal,
-      discount: discountAmount,
+      discountAmount,
       total: baseTotal - discountAmount,
       discountLabel: discountPercent > 0 ? `${discountPercent * 100}%` : null
     };
   };
 
-  const { subtotal, discount, total, discountLabel } = calculateTotal();
+  const { subtotal, discountAmount, total, discountLabel } = calculateTotal();
 
   const handleFinalUnlock = () => {
-    if (!email.includes('@')) { 
-      alert('⚠️ Please enter a valid email to link your permanent purchase.'); 
-      return; 
-    }
+    if (!email.includes('@')) { alert('Please enter valid email.'); return; }
     const cleanEmail = email.toLowerCase().trim();
     setIsProcessing(true);
     
     setTimeout(() => {
-      const updatedPurchases = Array.from(new Set([...purchased, ...cart]));
+      const currentStored = JSON.parse(localStorage.getItem(PURCHASE_KEY) || '[]');
+      const updatedPurchases = Array.from(new Set([...currentStored, ...purchased, ...cart]));
+      
+      // Update local state immediately
       setPurchased(updatedPurchases);
       localStorage.setItem(PURCHASE_KEY, JSON.stringify(updatedPurchases));
       
+      // Update "Cloud" Mock - IMPORTANT: Store FULL history for this email
       const cloudDb = JSON.parse(localStorage.getItem(CLOUD_MOCK_KEY) || '{}');
-      cloudDb[cleanEmail] = updatedPurchases;
+      const existingForEmail = cloudDb[cleanEmail] || [];
+      const updatedCloudHistory = Array.from(new Set([...existingForEmail, ...updatedPurchases]));
+      cloudDb[cleanEmail] = updatedCloudHistory;
       localStorage.setItem(CLOUD_MOCK_KEY, JSON.stringify(cloudDb));
 
       setIsProcessing(false);
       setIsCheckoutOpen(false);
       setCart([]);
-      alert(`🎉 SUCCESS! Subjects unlocked. Access is linked to ${cleanEmail}.`);
+      alert(`Success! Content Unlocked for ${cleanEmail}. Vault Access Granted.`);
       navigate('/');
-    }, 2000);
+    }, 1800);
   };
 
   return (
-    <div className="p-10 md:p-16 max-w-7xl mx-auto space-y-20 relative pb-48">
-       <header className="text-center space-y-10 animate-in slide-in-from-top duration-700">
-        <h2 className="text-6xl md:text-7xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">THE <span className="text-rose-600">VAULT.</span></h2>
+    <div className="p-6 md:p-16 max-w-7xl mx-auto space-y-16 relative pb-48">
+      <BackButton />
+      
+      <header className="text-center space-y-12">
+        <h2 className="text-5xl md:text-8xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">THE <span className="text-rose-600">VAULT.</span></h2>
         
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-           <div className="bg-indigo-600 text-white p-8 rounded-[3rem] border-4 border-indigo-400 shadow-2xl relative overflow-hidden group">
-              <h4 className="text-2xl font-black uppercase tracking-tighter mb-1 relative z-10">Study Bundle</h4>
-              <p className="font-bold text-indigo-100 uppercase text-[10px] tracking-widest relative z-10">Add 3+ subjects to cart</p>
-              <div className="text-5xl font-black mt-3 relative z-10">20% OFF</div>
-           </div>
-           <div className="bg-rose-600 text-white p-8 rounded-[3rem] border-4 border-rose-400 shadow-2xl relative overflow-hidden group animate-pulse">
-              <h4 className="text-2xl font-black uppercase tracking-tighter mb-1 relative z-10">ULTIMATE ACCESS</h4>
-              <p className="font-bold text-rose-100 uppercase text-[10px] tracking-widest relative z-10">Unlock all 6 subjects</p>
-              <div className="text-5xl font-black mt-3 relative z-10">30% OFF</div>
-           </div>
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 dark:border-indigo-800 p-8 rounded-[3rem] text-center">
+            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-2">1 Subject</span>
+            <div className="text-4xl font-black dark:text-white">₹29</div>
+            <p className="text-[9px] font-bold text-slate-500 uppercase mt-2">Special Price</p>
+          </div>
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-300 dark:border-emerald-800 p-8 rounded-[3rem] text-center relative">
+            <div className="absolute top-4 right-4 bg-emerald-500 text-white text-[8px] font-black px-3 py-1 rounded-full">20% OFF</div>
+            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest block mb-2">3+ Subjects</span>
+            <div className="text-4xl font-black dark:text-white">COMBO</div>
+            <p className="text-[9px] font-bold text-slate-500 uppercase mt-2">Automatic Saving</p>
+          </div>
+          <div className="bg-rose-50 dark:bg-rose-900/20 border-2 border-rose-300 dark:border-rose-800 p-8 rounded-[3rem] text-center relative">
+            <div className="absolute top-4 right-4 bg-rose-600 text-white text-[8px] font-black px-3 py-1 rounded-full">30% OFF</div>
+            <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest block mb-2">6 Subjects</span>
+            <div className="text-4xl font-black dark:text-white">ELITE</div>
+            <p className="text-[9px] font-bold text-slate-500 uppercase mt-2">Full Vault Access</p>
+          </div>
         </div>
-        <p className="text-[10px] font-black text-rose-600 uppercase tracking-[0.4em] animate-bounce">⚠️ Price rising to ₹99 soon! Current Price: ₹29 / subject</p>
       </header>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {SUBJECTS.map(subject => {
           const isOwned = purchased.includes(subject.id);
           const inCart = cart.includes(subject.id);
-
           return (
-            <div key={subject.id} className={`bg-white dark:bg-slate-900 p-10 rounded-[4rem] border-4 ${inCart ? 'border-indigo-600 scale-105 shadow-2xl' : 'border-slate-100 dark:border-slate-800 shadow-xl'} transition-all duration-500 flex flex-col items-center text-center space-y-6 group relative overflow-hidden`}>
-              {isOwned ? (
-                <div className="absolute top-8 right-8 text-emerald-500 font-black text-[9px] uppercase tracking-widest bg-emerald-50 px-5 py-1.5 rounded-full border border-emerald-100 shadow-sm">OWNED</div>
-              ) : (
-                <div className="absolute top-8 right-8 text-rose-600 font-black text-[9px] uppercase tracking-widest bg-rose-50 px-5 py-1.5 rounded-full border border-rose-100 shadow-sm animate-pulse">₹29</div>
-              )}
-              
-              <div className="text-8xl group-hover:scale-110 transition-transform duration-700">{subject.icon}</div>
-              <h3 className="text-3xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">{subject.name}</h3>
-              
-              <div className="w-full space-y-2 pt-4 border-t-2 border-slate-50 dark:border-slate-800">
-                 {['50+ Board Repeats', 'AI Model Answers', 'Full Subject Vault'].map(feat => (
-                   <div key={feat} className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">• {feat}</div>
-                 ))}
-              </div>
-
+            <div key={subject.id} className={`bg-white dark:bg-slate-900 p-8 rounded-[3rem] border-4 ${inCart ? 'border-indigo-600 scale-105 shadow-2xl' : 'border-slate-100 dark:border-slate-800'} transition-all flex flex-col items-center text-center space-y-6 group`}>
+              <div className="text-7xl group-hover:scale-110 transition-transform">{subject.icon}</div>
+              <h3 className="text-2xl font-black dark:text-white uppercase tracking-tighter">{subject.name}</h3>
               <button 
                 disabled={isOwned}
                 onClick={() => toggleCart(subject.id)}
-                className={`w-full py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95 ${isOwned ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : inCart ? 'bg-rose-600 text-white' : 'bg-black text-white dark:bg-white dark:text-black hover:bg-rose-600 hover:text-white'}`}
+                className={`w-full py-5 rounded-[1.5rem] font-black text-[9px] uppercase tracking-widest shadow-lg ${isOwned ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-100' : inCart ? 'bg-rose-600 text-white' : 'bg-black text-white dark:bg-white dark:text-black'}`}
               >
-                {isOwned ? 'UNLOCKED' : inCart ? 'REMOVE' : 'ADD TO VAULT'}
+                {isOwned ? '✓ UNLOCKED' : inCart ? 'REMOVE' : 'ADD TO VAULT'}
               </button>
             </div>
           );
         })}
       </div>
 
-      {cart.length > 0 && !isCheckoutOpen && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 w-[90%] max-w-4xl bg-black/95 backdrop-blur-3xl border-2 border-white/20 p-8 rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.6)] z-[250] flex flex-col md:flex-row items-center justify-between gap-6 animate-in slide-in-from-bottom-20 duration-500">
-           <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-rose-600 rounded-2xl flex items-center justify-center text-3xl shadow-2xl animate-pulse text-white">🛒</div>
+      {cart.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-4xl bg-black/95 p-8 rounded-[2.5rem] shadow-2xl z-[250] flex flex-col md:flex-row items-center justify-between gap-6 animate-in slide-in-from-bottom-10">
+           <div className="flex items-center gap-4 text-left">
+              <div className="w-12 h-12 bg-rose-600 rounded-xl flex items-center justify-center text-2xl text-white">🛒</div>
               <div>
-                <div className="text-white font-black text-2xl uppercase tracking-tighter leading-none">{cart.length} SUBJECTS SELECTED</div>
-                {discountLabel && <div className="text-emerald-400 font-black text-[10px] uppercase tracking-[0.2em] mt-1">✨ {discountLabel} SAVINGS APPLIED!</div>}
+                <div className="text-white font-black text-xl uppercase tracking-tighter">{cart.length} SUBJECTS SELECTED</div>
+                {discountLabel && <div className="text-emerald-400 font-black text-[8px] uppercase tracking-widest animate-pulse">✨ {discountLabel} DISCOUNT APPLIED</div>}
               </div>
            </div>
-           
-           <div className="flex items-center gap-10">
+           <div className="flex items-center gap-8">
               <div className="text-right">
-                <div className="text-slate-400 font-black text-[10px] uppercase tracking-widest mb-1">Total Payable</div>
-                <div className="text-white text-5xl font-black tracking-tighter leading-none">₹{total.toFixed(0)}</div>
+                <div className="text-white text-4xl font-black">₹{total.toFixed(0)}</div>
+                <div className="text-slate-400 text-[9px] font-black uppercase line-through">₹{subtotal}</div>
               </div>
-              <button 
-                onClick={() => setIsCheckoutOpen(true)} 
-                className="bg-indigo-600 text-white px-16 py-6 rounded-[2rem] font-black text-xl uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-90 transition-all"
-              >
-                PROCEED TO PAY
-              </button>
+              <button onClick={() => setIsCheckoutOpen(true)} className="bg-indigo-600 text-white px-10 py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-widest hover:scale-105 transition-all">CHECKOUT</button>
            </div>
         </div>
       )}
 
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-[600] bg-black/90 backdrop-blur-3xl flex items-start justify-center overflow-y-auto pt-6 pb-20 px-4 animate-in fade-in duration-300">
-           <div className="w-full max-w-6xl bg-white dark:bg-slate-950 rounded-[3rem] border-4 md:border-8 border-indigo-600 shadow-[0_80px_160px_rgba(0,0,0,1)] relative flex flex-col md:flex-row min-h-min max-h-none overflow-hidden">
-              
-              {/* Payment Detail (Right Panel - FIRST PRIORITY ON TOP) */}
-              <div className="flex-1 order-1 md:order-2 p-8 md:p-14 space-y-10 bg-indigo-50/50 dark:bg-indigo-950/20 border-b-4 md:border-b-0 border-slate-100 dark:border-slate-800">
-                 <div className="flex items-center justify-between mb-8">
-                   <h2 className="text-2xl font-black text-indigo-900 dark:text-indigo-100 uppercase tracking-tighter">Step 2: Payment</h2>
-                   <button onClick={() => setIsCheckoutOpen(false)} className="bg-rose-600 text-white font-black uppercase text-[9px] px-6 py-2 rounded-full shadow-lg">Close</button>
-                 </div>
-
-                 <div className="space-y-4">
-                    <label className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.3em] text-indigo-700 dark:text-indigo-400">
-                      <span className="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px]">1</span>
-                      Your Sync Email (Required)
-                    </label>
-                    <input 
-                      type="email" 
-                      placeholder="ENTER YOUR GMAIL" 
-                      autoFocus
-                      className="w-full bg-white dark:bg-black border-4 border-indigo-200 dark:border-indigo-900 p-8 rounded-[2rem] font-black text-center text-black dark:text-white outline-none focus:border-indigo-600 text-2xl shadow-xl transition-all placeholder:opacity-40"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      required
-                    />
-                    <div className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200 p-4 rounded-2xl text-[10px] font-bold uppercase text-center border border-amber-200">
-                      ⚠️ Purchase will be linked to this email forever!
-                    </div>
-                 </div>
-
-                 <div className="space-y-4">
-                    <label className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.3em] text-indigo-700 dark:text-indigo-400">
-                      <span className="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px]">2</span>
-                      Scan or Use UPI
-                    </label>
-                    <div className="p-8 bg-white dark:bg-black border-4 border-indigo-600 rounded-[2rem] flex flex-col items-center gap-4 text-black dark:text-white shadow-xl group">
-                       <span className="text-4xl">📱</span>
-                       <span className="text-sm font-black uppercase tracking-widest text-center">PhonePe / UPI / GPay Active</span>
-                       <div className="w-full bg-emerald-500 text-white text-[9px] py-2 rounded-xl font-black text-center animate-pulse">SECURE ENCRYPTED GATEWAY</div>
-                    </div>
-                 </div>
-
-                 <div className="pt-8 space-y-6">
-                    <button 
-                      disabled={isProcessing}
-                      onClick={handleFinalUnlock} 
-                      className="w-full bg-rose-600 text-white py-10 rounded-[3rem] font-black text-3xl uppercase tracking-[0.2em] shadow-[0_30px_60px_rgba(225,29,72,0.4)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4"
-                    >
-                      {isProcessing ? 'CONFIRMING...' : `PAY ₹${total.toFixed(0)} NOW`}
-                      {isProcessing && <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>}
-                    </button>
-                    <button onClick={() => setIsCheckoutOpen(false)} className="w-full text-[9px] font-black uppercase text-slate-400 tracking-[0.5em] hover:text-rose-600 text-center">Go back to cart</button>
-                 </div>
+        <div className="fixed inset-0 z-[600] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
+           <div className="bg-white dark:bg-slate-900 w-full max-w-xl p-10 rounded-[3.5rem] border-8 border-indigo-600 space-y-8 text-center">
+              <h2 className="text-3xl font-black uppercase tracking-tighter">Confirm Payment</h2>
+              <div className="space-y-4">
+                <div className="flex justify-between font-black uppercase text-[10px] text-slate-500">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal}</span>
+                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between font-black uppercase text-[10px] text-emerald-500 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                    <span>Bundle Savings</span>
+                    <span>-₹{discountAmount.toFixed(0)} ({discountLabel})</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center border-t-2 pt-6">
+                  <span className="text-xl font-black uppercase tracking-tighter">Final Total</span>
+                  <span className="text-4xl font-black text-indigo-600">₹{total.toFixed(0)}</span>
+                </div>
               </div>
-
-              {/* Order Info (Left Panel) */}
-              <div className="flex-[0.7] order-2 md:order-1 p-8 md:p-12 space-y-8 bg-white dark:bg-slate-950">
-                 <h2 className="text-2xl font-black text-black dark:text-white uppercase tracking-tighter leading-none border-b-4 pb-4 border-slate-100 dark:border-slate-800">Step 1: Order Summary</h2>
-                 
-                 <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
-                    {cart.map(id => {
-                       const s = SUBJECTS.find(subj => subj.id === id);
-                       return (
-                         <div key={id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-[1.5rem] border-2 border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-4">
-                               <span className="text-3xl">{s?.icon}</span>
-                               <span className="font-black text-[10px] text-black dark:text-white uppercase tracking-tight">{s?.name} Vault</span>
-                            </div>
-                            <span className="font-black text-lg text-indigo-600">₹29</span>
-                         </div>
-                       );
-                    })}
-                 </div>
-
-                 <div className="pt-6 space-y-4 border-t-4 border-slate-100 dark:border-slate-900">
-                    <div className="flex justify-between font-black uppercase text-[10px] tracking-widest text-slate-400 px-2">
-                       <span>Bag Subtotal</span>
-                       <span>₹{subtotal}</span>
-                    </div>
-                    {discountLabel && (
-                       <div className="flex justify-between font-black uppercase text-[10px] tracking-widest text-emerald-500 px-2 animate-pulse">
-                          <span>Bundle Offer ({discountLabel})</span>
-                          <span>- ₹{discount.toFixed(0)}</span>
-                       </div>
-                    )}
-                    <div className="flex justify-between items-center pt-6 border-t-4 border-slate-200 dark:border-slate-800 px-2">
-                       <span className="text-xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">TOTAL PAYABLE</span>
-                       <span className="text-5xl font-black text-indigo-600 tracking-tighter leading-none">₹{total.toFixed(0)}</span>
-                    </div>
-                 </div>
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Enter Sync Email Address</p>
+                <input type="email" placeholder="YOUR EMAIL ADDRESS" className="w-full p-6 bg-slate-50 dark:bg-black border-2 border-slate-200 dark:border-slate-800 rounded-3xl font-black text-center" value={email} onChange={e => setEmail(e.target.value)} />
               </div>
+              <button onClick={handleFinalUnlock} disabled={isProcessing} className="w-full bg-rose-600 text-white py-8 rounded-[2rem] font-black text-2xl uppercase tracking-widest shadow-xl active:scale-95 transition-all">
+                {isProcessing ? 'PROCESSING...' : `PAY ₹${total.toFixed(0)}`}
+              </button>
+              <button onClick={() => setIsCheckoutOpen(false)} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-rose-600">Cancel Checkout</button>
            </div>
         </div>
       )}
@@ -529,44 +430,54 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
 };
 
 const SubjectPage = ({ purchased }: { purchased: string[] }) => {
-  const { id } = useParams<{ id: SubjectId }>();
+  const { id } = useParams<{ id: string }>();
   const subject = SUBJECTS.find(s => s.id === id);
-  const isPurchased = purchased.includes(id as string);
+  // Robust check
+  const currentPurchased = [...purchased, ...JSON.parse(localStorage.getItem(PURCHASE_KEY) || '[]')];
+  const isPurchased = currentPurchased.includes(id as string);
 
-  if (!subject) return <div>Subject not found</div>;
+  if (!subject) return (
+    <div className="p-20 text-center flex flex-col items-center">
+       <h2 className="text-2xl font-black">Subject not found</h2>
+       <Link to="/" className="text-indigo-600 underline mt-4">Go Home</Link>
+    </div>
+  );
 
   return (
-    <div className="p-8 md:p-16 max-w-7xl mx-auto space-y-16">
+    <div className="p-6 md:p-16 max-w-7xl mx-auto space-y-12">
+      <BackButton />
       <header className="flex flex-col lg:flex-row items-center gap-12 border-b-4 border-slate-100 dark:border-slate-900 pb-16">
-        <div className="text-[8rem] md:text-[10rem] drop-shadow-2xl animate-in zoom-in duration-700 flex-shrink-0">{subject.icon}</div>
-        <div className="flex-1 text-center lg:text-left space-y-4">
-          <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.8]">{subject.name} Master Files</h2>
-          <div className="flex flex-wrap justify-center lg:justify-start gap-4 pt-2">
+        <div className="text-[8rem] md:text-[10rem] drop-shadow-2xl animate-in zoom-in duration-700">{subject.icon}</div>
+        <div className="flex-1 text-center lg:text-left space-y-6">
+          <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">{subject.name} MASTER FILES</h2>
+          <div className="flex flex-col md:flex-row items-center gap-6">
             {isPurchased ? (
-              <Link to={`/vault/${id}`} className="bg-emerald-500 text-white px-10 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center gap-3">
-                <span className="text-xl">✓</span> OPEN VAULT
-              </Link>
+              <div className="flex flex-col md:flex-row items-center gap-4">
+                 <Link to={`/vault/${id}`} className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl hover:scale-105 transition-all">✓ OPEN PREMIUM VAULT</Link>
+                 <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">UNLOCKED ACCESS</span>
+              </div>
             ) : (
-              <Link to="/premium" className="bg-rose-600 text-white px-10 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] shadow-xl animate-pulse hover:scale-110 active:scale-95 transition-all flex items-center gap-3">
-                <span className="text-xl">💎</span> UNLOCK PREMIUM
-              </Link>
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <Link to="/premium" className="bg-rose-600 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl animate-pulse">💎 UNLOCK PREDICTIONS</Link>
+                <Link to="/login" className="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600">Sync Purchase</Link>
+              </div>
             )}
           </div>
         </div>
       </header>
 
-      <div className="grid gap-10">
-        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-2">Detailed Notes Archive</div>
+      <div className="grid gap-8">
+        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-4">Course Contents</div>
         {subject.chapters.map((chapter, idx) => (
-          <div key={chapter.id} className="p-10 md:p-12 bg-white dark:bg-slate-900 rounded-[3rem] border-4 border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-10 shadow-xl hover:scale-[1.02] hover:border-indigo-600 transition-all duration-700 group">
+          <div key={chapter.id} className="p-8 md:p-10 bg-white dark:bg-slate-900 rounded-[3rem] border-4 border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-8 shadow-lg hover:border-indigo-600 transition-all group">
             <div className="flex-1 text-center md:text-left">
-              <span className="text-indigo-600 font-black text-4xl italic opacity-10 tracking-tighter group-hover:opacity-100 transition-opacity">CH {idx+1}</span>
-              <h3 className="text-2xl md:text-3xl font-black text-black dark:text-white uppercase tracking-tighter mt-3 leading-none">{chapter.title}</h3>
-              <p className="text-lg font-bold text-slate-500 mt-4 leading-relaxed max-w-xl">{chapter.description}</p>
+              <span className="text-indigo-600 font-black text-3xl italic opacity-20">CH {idx+1}</span>
+              <h3 className="text-2xl font-black text-black dark:text-white uppercase tracking-tighter mt-2">{chapter.title}</h3>
+              <p className="text-slate-500 mt-2 font-bold uppercase text-[9px] tracking-widest leading-relaxed max-w-xl">{chapter.description}</p>
             </div>
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-3">
               {[...Array(chapter.totalParts)].map((_, i) => (
-                <Link key={i} to={`/chapter/${id}/${chapter.title}/${i + 1}/${chapter.totalParts}`} className="bg-slate-50 dark:bg-slate-800 text-black dark:text-white px-8 py-5 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-inner hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all border-2 border-transparent hover:border-indigo-600 active:scale-90">Part {i+1}</Link>
+                <Link key={i} to={`/chapter/${id}/${chapter.title}/${i + 1}/${chapter.totalParts}`} className="bg-slate-50 dark:bg-slate-800 text-black dark:text-white px-6 py-4 rounded-xl font-black text-[9px] uppercase tracking-widest border-2 border-transparent hover:border-indigo-600 transition-all active:scale-90">Part {i+1}</Link>
               ))}
             </div>
           </div>
@@ -576,33 +487,64 @@ const SubjectPage = ({ purchased }: { purchased: string[] }) => {
   );
 };
 
-const Home = () => (
-  <div className="p-10 md:p-20 max-w-7xl mx-auto space-y-20 animate-in fade-in slide-in-from-bottom-20 duration-1000">
-    <header className="text-center space-y-10 max-w-6xl mx-auto">
-      <div className="inline-block bg-indigo-600 text-white text-[12px] px-10 py-3 rounded-full font-black uppercase tracking-[0.5em] shadow-2xl mb-2">Class 12 Boards 2026 • AI MASTER</div>
-      <h1 className="text-6xl md:text-8xl font-black text-black dark:text-white tracking-tighter leading-[0.7] uppercase">Boards <br/><span className="text-indigo-600">Mastered.</span></h1>
-      <p className="text-2xl md:text-3xl font-bold text-slate-500 max-w-4xl mx-auto leading-relaxed uppercase tracking-tight">AI-Generated Master Notes & The 50 Most Repeated Board Exam patterns. Simplified for the perfect 95%+ score.</p>
-      <div className="flex flex-wrap justify-center gap-10 pt-12">
-        <Link to="/subject/physics" className="bg-black text-white dark:bg-white dark:text-black px-16 py-7 rounded-[2rem] font-black text-sm uppercase tracking-[0.4em] shadow-2xl hover:scale-110 active:scale-95 transition-all border-4 border-transparent hover:border-indigo-600">Free Notes</Link>
-        <Link to="/premium" className="bg-rose-600 text-white px-16 py-7 rounded-[2rem] font-black text-sm uppercase tracking-[0.4em] shadow-2xl hover:scale-110 active:scale-95 transition-all relative overflow-hidden group">
-          <div className="absolute inset-0 bg-white/20 translate-y-[100%] group-hover:translate-y-[0] transition-transform duration-500"></div>
-          <span className="relative z-10">THE VAULT</span>
-        </Link>
+const Home = () => {
+  const subjectsRef = useRef<HTMLDivElement>(null);
+  const scrollToSubjects = () => subjectsRef.current?.scrollIntoView({ behavior: 'smooth' });
+
+  return (
+    <div className="animate-in fade-in duration-1000 pb-20">
+      <header className="text-center space-y-10 max-w-6xl mx-auto pt-16 px-6">
+        <div className="inline-block bg-indigo-600 text-white text-[12px] px-8 py-3 rounded-full font-black uppercase tracking-[0.4em] shadow-2xl">Board Prep Master 2026</div>
+        <h1 className="text-6xl md:text-8xl font-black text-black dark:text-white tracking-tighter leading-[0.8] uppercase">Ace 12th <br/><span className="text-indigo-600">GRADE.</span></h1>
+        <p className="text-xl md:text-2xl font-bold text-slate-500 max-w-4xl mx-auto leading-relaxed uppercase tracking-tight">AI Notes & 50 Most Repeated PYQs. Built for Class 12 Boards Success.</p>
+        
+        <div className="flex flex-col items-center gap-8 pt-8">
+          <div className="flex flex-wrap justify-center gap-6">
+            <button onClick={scrollToSubjects} className="bg-black text-white dark:bg-white dark:text-black px-12 py-6 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Free Notes</button>
+            <Link to="/premium" className="bg-rose-600 text-white px-12 py-6 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">The Vault</Link>
+          </div>
+          <Link to="/login" className="text-[10px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest flex items-center gap-3 transition-all bg-slate-100 px-6 py-3 rounded-full dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800">
+            <span>🔄</span> Restore Purchased Access
+          </Link>
+        </div>
+      </header>
+
+      <div ref={subjectsRef} className="mt-40 max-w-7xl mx-auto px-6 space-y-16">
+        <div className="text-center space-y-4">
+          <h2 className="text-4xl md:text-6xl font-black text-black dark:text-white uppercase tracking-tighter">Choose Subject</h2>
+          <div className="w-20 h-2 bg-indigo-600 mx-auto rounded-full"></div>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {SUBJECTS.map((subject) => (
+            <Link 
+              key={subject.id} 
+              to={`/subject/${subject.id}`}
+              className="group bg-white dark:bg-slate-900 p-10 rounded-[3rem] border-4 border-slate-100 dark:border-slate-800 shadow-xl hover:border-indigo-600 hover:scale-[1.03] transition-all flex flex-col items-center text-center space-y-6"
+            >
+              <div className="text-8xl group-hover:scale-110 transition-transform duration-500">{subject.icon}</div>
+              <h3 className="text-3xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">{subject.name}</h3>
+              <div className="w-full bg-slate-50 dark:bg-slate-800 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">Start Reading</div>
+            </Link>
+          ))}
+        </div>
       </div>
-    </header>
-  </div>
-);
+    </div>
+  );
+};
 
 const App = () => {
   const [isDark, setIsDark] = useState(false);
   const [purchased, setPurchased] = useState<string[]>(() => {
     try {
-      return JSON.parse(localStorage.getItem(PURCHASE_KEY) || '[]');
+      const data = localStorage.getItem(PURCHASE_KEY);
+      return data ? JSON.parse(data) : [];
     } catch { return []; }
   });
   const [user, setUser] = useState<UserProfile | null>(() => {
     try {
-      return JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+      const data = localStorage.getItem(USER_KEY);
+      return data ? JSON.parse(data) : null;
     } catch { return null; }
   });
 
@@ -619,29 +561,37 @@ const App = () => {
     const cleanEmail = email.toLowerCase().trim();
     const cloudDb = JSON.parse(localStorage.getItem(CLOUD_MOCK_KEY) || '{}');
     const cloudPurchases = cloudDb[cleanEmail] || [];
-    const merged = Array.from(new Set([...purchased, ...cloudPurchases]));
-    setPurchased(merged);
-    setUser({ email: cleanEmail, purchasedSubjects: merged as SubjectId[], lastSync: Date.now() });
     
+    // Aggressive State Refresh
+    const merged = Array.from(new Set([...purchased, ...cloudPurchases]));
+    
+    // Update both local storage and state for immediate vault access
+    localStorage.setItem(PURCHASE_KEY, JSON.stringify(merged));
+    setPurchased(merged);
+    
+    setUser({ 
+      email: cleanEmail, 
+      purchasedSubjects: merged as SubjectId[], 
+      lastSync: Date.now() 
+    });
+
     if (cloudPurchases.length > 0) {
-      alert(`🎉 ACCOUNT RESTORED! Access to ${cloudPurchases.length} subjects found for ${cleanEmail}. Syncing your vault now...`);
+      alert(`🎉 SYNC SUCCESS! Restored ${cloudPurchases.length} subjects for ${cleanEmail}. Vaults are now UNLOCKED.`);
     } else {
-      alert(`Account Linked to ${cleanEmail}. No previous purchases found on our master server.`);
+      alert(`No previous purchases found for ${cleanEmail}. Vaults remain locked.`);
     }
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    alert('Session Ended. Your vault access remains tied to your email.');
-  };
+  const handleLogout = () => { setUser(null); alert('Logged out.'); };
 
   return (
     <div className={isDark ? 'dark' : ''}>
-      <FomoToast />
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex transition-colors duration-500 selection:bg-indigo-600 selection:text-white">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col lg:flex-row transition-colors duration-500">
         <HashRouter>
+          <MobileHeader user={user} />
           <Sidebar isDark={isDark} setIsDark={setIsDark} user={user} onLogout={handleLogout} />
-          <main className="flex-1 h-screen overflow-y-auto no-scrollbar relative">
+          <main className="flex-1 h-[calc(100vh-4rem)] lg:h-screen overflow-y-auto no-scrollbar relative">
+            <FomoToast />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/subject/:id" element={<SubjectPage purchased={purchased} />} />
