@@ -13,7 +13,6 @@ FORMULA RULES (FOLLOW STRICTLY):
 - One formula per line.
 - Use standard notations (e.g., E = mc²).
 - If multiple formulas, separate with "---".
-// Fixed: Escaped backtick in the string to prevent premature termination of the template literal, which was causing errors.
 - Do not use markdown backticks (\`) for formulas, just plain text in a centered serif style.
 
 IMAGE PROMPTING:
@@ -40,9 +39,22 @@ const NOTE_SCHEMA = {
         },
         required: ['title', 'content', 'type']
       }
+    },
+    importantQuestions: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          question: { type: Type.STRING },
+          solution: { type: Type.STRING },
+          yearAnalysis: { type: Type.STRING, description: "Mention years like (Delhi 2018, AI 2020)" }
+        },
+        required: ['question', 'solution', 'yearAnalysis']
+      },
+      description: "Exactly 2 high-yield questions most likely to appear in Boards."
     }
   },
-  required: ['chapterTitle', 'subject', 'sections']
+  required: ['chapterTitle', 'subject', 'sections', 'importantQuestions']
 };
 
 const PREMIUM_SCHEMA = {
@@ -78,18 +90,19 @@ export const generateChapterNotes = async (
   part: number,
   totalParts: number
 ): Promise<ChapterNote> => {
-  const cacheKey = `note_v2026_full_${subjectId}_${chapterTitle}_${part}`;
+  const cacheKey = `note_v2026_full_q2_${subjectId}_${chapterTitle}_${part}`;
   const cached = localStorage.getItem(cacheKey);
   if (cached) return JSON.parse(cached);
 
   const result = await retryRequest(async () => {
-    // Fixed: Initializing GoogleGenAI instance right before use.
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Generate deep master notes for "${chapterTitle}" (${subjectId}), Part ${part}/${totalParts}. 
-      MANDATORY: For every section of type 'formula' or 'reaction', you MUST include a 'visualPrompt' describing a textbook diagram. 
-      Ensure formulas are presented simply and clearly as per textbook standards.`,
+      MANDATORY: 
+      1. Include exactly 2 High-Yield Important Questions at the end of this part.
+      2. For every section of type 'formula' or 'reaction', include a 'visualPrompt'.
+      3. Use clear textbook standards.`,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
@@ -97,7 +110,7 @@ export const generateChapterNotes = async (
       },
     });
     const parsed = JSON.parse(response.text || '{}');
-    const finalNote = { ...parsed, part, importantQuestions: [] };
+    const finalNote = { ...parsed, part };
     localStorage.setItem(cacheKey, JSON.stringify(finalNote));
     return finalNote;
   });
@@ -110,7 +123,6 @@ export const generatePremiumQuestions = async (subjectId: SubjectId): Promise<Pr
   if (cached) return JSON.parse(cached);
 
   const result = await retryRequest(async () => {
-    // Fixed: Initializing GoogleGenAI instance right before use.
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -137,7 +149,6 @@ export const generateAestheticImage = async (prompt: string, force = false): Pro
   }
   try {
     return await retryRequest(async () => {
-      // Fixed: Initializing GoogleGenAI instance right before use.
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
@@ -158,7 +169,6 @@ export const generateAestheticImage = async (prompt: string, force = false): Pro
 
 export const generateSpeech = async (text: string): Promise<string | null> => {
   try {
-    // Fixed: Initializing GoogleGenAI instance right before use.
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",

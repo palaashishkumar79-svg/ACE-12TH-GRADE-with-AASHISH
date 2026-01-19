@@ -255,16 +255,65 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin }) => {
         </div>
       </header>
 
+      {/* Main Content Sections */}
       <div className="space-y-4">
         {currentNote.sections.map((section, idx) => renderSection(section, idx))}
       </div>
 
+      {/* Free Sample Questions (Requested) */}
+      {currentNote.importantQuestions && currentNote.importantQuestions.length > 0 && (
+        <div className="mt-32 pt-16 border-t-4 border-amber-100 dark:border-amber-900/30 space-y-12">
+           <div className="text-center">
+              <span className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-[0.3em]">High-Yield Board Questions</span>
+              <h2 className="text-3xl font-black text-black dark:text-white uppercase tracking-tighter mt-4">Must Practice for Exam</h2>
+           </div>
+           
+           <div className="grid gap-8">
+             {currentNote.importantQuestions.slice(0, 2).map((q, idx) => (
+               <div key={idx} className="bg-amber-50 dark:bg-slate-900 p-8 md:p-12 rounded-[2.5rem] border-2 border-amber-200 dark:border-amber-900/40 shadow-lg group">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="w-10 h-10 bg-amber-500 text-white rounded-full flex items-center justify-center font-black">Q</span>
+                    <span className="text-amber-700 dark:text-amber-400 font-black text-[9px] uppercase tracking-widest">{q.yearAnalysis}</span>
+                  </div>
+                  <FormattedText text={q.question} className="text-xl md:text-2xl font-black dark:text-white mb-8 leading-tight" />
+                  <div className="bg-white dark:bg-black/40 p-6 rounded-2xl border border-amber-100 dark:border-amber-900/20">
+                    <p className="text-amber-600 text-[9px] font-black uppercase tracking-widest mb-2">Detailed AI Solution:</p>
+                    <FormattedText text={q.solution} className="text-lg font-bold dark:text-slate-300 leading-relaxed" />
+                  </div>
+               </div>
+             ))}
+           </div>
+        </div>
+      )}
+
+      {/* CTA Section */}
       <footer className="mt-40 pt-20 border-t-8 border-slate-50 dark:border-slate-900 text-center no-print">
-          <div className="bg-indigo-600 text-white p-12 md:p-20 rounded-[4rem] shadow-2xl space-y-8">
-            <div className="text-8xl">💎</div>
-            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-tight">Unlock the Full Vault</h2>
-            <p className="text-lg font-bold text-indigo-100 uppercase max-w-2xl mx-auto">Get the elite 50 repeated board questions for {currentNote.subject.replace('_', ' ')} solved with AI logic.</p>
-            <Link to={`/vault/${currentNote.subject}`} className="inline-block bg-white text-indigo-600 px-16 py-6 rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-110 active:scale-95 transition-all">Open Premium Portal</Link>
+          <div className="bg-indigo-600 text-white p-12 md:p-20 rounded-[4rem] shadow-2xl space-y-10 relative overflow-hidden">
+            {/* Visual Flare */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-rose-500/20 rounded-full blur-3xl"></div>
+            
+            <div className="relative z-10 space-y-6">
+              <div className="text-8xl animate-bounce-slow">💎</div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-amber-300 uppercase tracking-[0.3em] animate-pulse">Want More Highly Expected Questions?</h3>
+                <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none">99% SURE QUESTIONS <br/><span className="text-white">FOR YOUR BOARDS.</span></h2>
+              </div>
+              
+              <p className="text-lg md:text-xl font-bold text-indigo-100 uppercase max-w-2xl mx-auto leading-relaxed">
+                Unlock the <span className="text-amber-300">Elite 50+ Repeated Questions Vault</span> for {currentNote.subject.replace('_', ' ')} including Case Studies & Assertion-Reason.
+              </p>
+
+              <div className="pt-6">
+                <Link to={`/vault/${currentNote.subject}`} className="inline-block bg-white text-indigo-600 px-16 py-8 rounded-[2rem] font-black text-lg uppercase tracking-widest shadow-2xl hover:scale-110 active:scale-95 transition-all group">
+                  BUY PREMIUM VAULT NOW <span className="inline-block group-hover:translate-x-2 transition-transform">🚀</span>
+                </Link>
+              </div>
+              
+              <div className="pt-4 text-[9px] font-black text-indigo-200 uppercase tracking-widest opacity-60">
+                Limited Time Offer: Unlock your 95%+ Board Strategy
+              </div>
+            </div>
           </div>
       </footer>
     </div>
