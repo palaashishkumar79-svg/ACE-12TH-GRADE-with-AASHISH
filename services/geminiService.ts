@@ -2,26 +2,25 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { ChapterNote, SubjectId, PremiumQuestion } from "../types";
 
+const APP_VERSION = "v2026_final_v1";
+
 const SYSTEM_INSTRUCTION = `You are "Ace12thGRADE AI Master", a senior CBSE Board examiner. 
 
 CORE MISSION:
 - Provide 100% comprehensive coverage of the CBSE 2026 syllabus.
-- For Physics/Maths/Chemistry: Formulas are the soul. Every formula MUST be on its own line.
-- For every 'formula' or 'reaction' section, you MUST provide a detailed 'visualPrompt' describing a textbook diagram or a clean mathematical setup.
+- Use natural, clean language. NO technical instructions (like "visualPrompt:", "---", or "\n") should ever be visible in the final text.
+- Use professional bullet points (•) and bold text (**) for key terms.
+- For Physics/Maths/Chemistry: Ensure formulas are clear and easy to read.
 
-FORMULA RULES (FOLLOW STRICTLY):
-- One formula per line.
-- Use standard notations (e.g., E = mc²).
-- If multiple formulas, separate with "---".
-- Do not use markdown backticks (\`) for formulas, just plain text in a centered serif style.
+FORMATTING RULES:
+- DO NOT use "---" for separation. Use standard new lines.
+- DO NOT mention "visualPrompt" inside the content/solution field. Keep it ONLY in the specific 'visualPrompt' JSON field.
+- If a concept is hard, explain it in simple "Hinglish" logic inside a 'Trick' section.
 
 IMAGE PROMPTING:
-- 'visualPrompt' should be: "A professional, high-quality textbook diagram showing [concept], clean lines, white background, high contrast, labeled parts."
+- 'visualPrompt' must be a vivid description for an AI Image Generator: "Textbook style scientific diagram of [concept], 4k, clean white background, professional labels, high contrast, black and white sketch style."
 
-CLEANLINESS:
-- No excessive emojis. 
-- Professional, academic, and authoritative.
-- Output MUST be valid JSON matching the schema strictly.`;
+Output MUST be valid JSON strictly matching the schema.`;
 
 const NOTE_SCHEMA = {
   type: Type.OBJECT,
@@ -36,7 +35,7 @@ const NOTE_SCHEMA = {
           title: { type: Type.STRING },
           content: { type: Type.STRING },
           type: { type: Type.STRING, enum: ['theory', 'formula', 'trick', 'reaction', 'code', 'summary', 'application', 'derivation', 'character_sketch', 'stanza_analysis'] },
-          visualPrompt: { type: Type.STRING }
+          visualPrompt: { type: Type.STRING, description: "Only describe the image here. Do not repeat this in 'content'." }
         },
         required: ['title', 'content', 'type']
       }
@@ -48,11 +47,10 @@ const NOTE_SCHEMA = {
         properties: {
           question: { type: Type.STRING },
           solution: { type: Type.STRING },
-          yearAnalysis: { type: Type.STRING, description: "Mention years like (Delhi 2018, AI 2020)" }
+          yearAnalysis: { type: Type.STRING }
         },
         required: ['question', 'solution', 'yearAnalysis']
-      },
-      description: "Exactly 2 high-yield questions most likely to appear in Boards."
+      }
     }
   },
   required: ['chapterTitle', 'subject', 'sections', 'importantQuestions']
@@ -63,13 +61,14 @@ const PREMIUM_SCHEMA = {
   items: {
     type: Type.OBJECT,
     properties: {
-      type: { type: Type.STRING, description: "MCQ, CASE-STUDY, LONG-ANS, ASSERTION-REASON, or SHORT-ANS" },
+      type: { type: Type.STRING },
       question: { type: Type.STRING },
       solution: { type: Type.STRING },
       freqencyScore: { type: Type.NUMBER },
-      repeatedYears: { type: Type.ARRAY, items: { type: Type.STRING } }
+      repeatedYears: { type: Type.ARRAY, items: { type: Type.STRING } },
+      visualPrompt: { type: Type.STRING, description: "A description of a diagram for this specific problem." }
     },
-    required: ['type', 'question', 'solution', 'freqencyScore', 'repeatedYears']
+    required: ['type', 'question', 'solution', 'freqencyScore', 'repeatedYears', 'visualPrompt']
   }
 };
 
@@ -92,26 +91,18 @@ export const generateChapterNotes = async (
   totalParts: number,
   forceRefresh = false
 ): Promise<ChapterNote> => {
-  const cacheKey = `note_v2026_full_q2_${subjectId}_${chapterTitle}_${part}`;
+  const cacheKey = `note_${APP_VERSION}_${subjectId}_${chapterTitle.replace(/\s+/g, '_')}_${part}`;
   
   if (!forceRefresh) {
     const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (parsed.sections && parsed.sections.length > 0) return parsed;
-    }
+    if (cached) return JSON.parse(cached);
   }
 
   const result = await retryRequest(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Generate deep master notes for "${chapterTitle}" (${subjectId}), Part ${part}/${totalParts}. 
-      MANDATORY: 
-      1. Use clear, simple language (Hinglish mix for tricks is okay).
-      2. Include exactly 2 High-Yield Important Questions at the end.
-      3. Focus on quality definitions and derivation steps if any.
-      4. Ensure valid JSON structure.`,
+      contents: `Generate MASTER notes for "${chapterTitle}" in ${subjectId}, Part ${part}/${totalParts}. Focus on accuracy and point-wise layout.`,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
@@ -119,13 +110,7 @@ export const generateChapterNotes = async (
       },
     });
     
-    const text = response.text || '{}';
-    const parsed = JSON.parse(text);
-    
-    // Safety fallback for empty arrays
-    if (!parsed.sections) parsed.sections = [];
-    if (!parsed.importantQuestions) parsed.importantQuestions = [];
-    
+    const parsed = JSON.parse(response.text || '{}');
     const finalNote = { ...parsed, part, subject: subjectId };
     localStorage.setItem(cacheKey, JSON.stringify(finalNote));
     return finalNote;
@@ -133,17 +118,19 @@ export const generateChapterNotes = async (
   return result;
 };
 
-export const generatePremiumQuestions = async (subjectId: SubjectId): Promise<PremiumQuestion[]> => {
-  const cacheKey = `premium_vault_v2026_elite_${subjectId}`;
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) return JSON.parse(cached);
+export const generatePremiumQuestions = async (subjectId: SubjectId, forceRefresh = false): Promise<PremiumQuestion[]> => {
+  const cacheKey = `premium_${APP_VERSION}_${subjectId}`;
+  
+  if (!forceRefresh) {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) return JSON.parse(cached);
+  }
 
   const result = await retryRequest(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Generate exactly 50 most repeated and predicted Board Exam questions for ${subjectId} (2026 Pattern). 
-      Include MCQs, Case Studies, and Long Answers.`,
+      contents: `Generate exactly 50 most repeated Board Exam questions for ${subjectId} (2026 Pattern). Include diagrams and high-yield solutions.`,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
@@ -158,17 +145,20 @@ export const generatePremiumQuestions = async (subjectId: SubjectId): Promise<Pr
 };
 
 export const generateAestheticImage = async (prompt: string, force = false): Promise<string | null> => {
-  const cacheKey = `img_${btoa(prompt).slice(0, 32)}`;
+  if (!prompt || prompt.length < 5) return null;
+  const cacheKey = `img_${btoa(prompt.substring(0, 50)).replace(/[/+=]/g, '')}`;
+  
   if (!force) {
     const cached = localStorage.getItem(cacheKey);
     if (cached) return cached;
   }
+
   try {
     return await retryRequest(async () => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
-        contents: { parts: [{ text: `${prompt}. Professional textbook diagram, clean lines, white background, high contrast.` }] },
+        contents: { parts: [{ text: `${prompt}. Scientific textbook diagram, high contrast, white background.` }] },
         config: { imageConfig: { aspectRatio: "1:1" } }
       });
       for (const part of response.candidates[0].content.parts) {
@@ -188,18 +178,12 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Explain this clearly: ${text}` }] }],
+      contents: [{ parts: [{ text: `Explain this board concept clearly: ${text}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' },
-          },
-        },
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
       },
     });
     return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || null;
-  } catch (error) {
-    return null;
-  }
+  } catch (error) { return null; }
 };

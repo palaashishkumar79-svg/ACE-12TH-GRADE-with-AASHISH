@@ -51,7 +51,15 @@ export const FormattedText: React.FC<FormattedTextProps> = ({ text, className = 
 
   const elements = useMemo(() => {
     if (!text) return "";
-    const clean = text.replace(/\\/g, ''); 
+    
+    // STRICT CLEANER: Removes common AI artifacts
+    const clean = text
+      .replace(/\\/g, '')
+      .replace(/visualPrompt:.*$/gmi, '') // Remove visualPrompt leaks
+      .replace(/---/g, '\n')              // Remove dash separators
+      .replace(/Trick:/g, '**Pro Trick:**')
+      .trim();
+      
     const parts = clean.split(/(\*\*.*?\*\*)/gs);
     
     return parts.map((part, i) => {
@@ -69,7 +77,7 @@ export const FormattedText: React.FC<FormattedTextProps> = ({ text, className = 
   return <div className={`${className} leading-relaxed whitespace-pre-wrap`}>{elements}</div>;
 };
 
-const FormulaImage = ({ prompt, onPromptUpdate, isEditable }: { prompt: string, onPromptUpdate?: (p: string) => void, isEditable?: boolean }) => {
+export const FormulaImage = ({ prompt, onPromptUpdate, isEditable }: { prompt: string, onPromptUpdate?: (p: string) => void, isEditable?: boolean }) => {
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [p, setP] = useState(prompt);
@@ -77,7 +85,7 @@ const FormulaImage = ({ prompt, onPromptUpdate, isEditable }: { prompt: string, 
   useEffect(() => {
     let active = true;
     const fetchImg = async () => {
-      if (!prompt) { setLoading(false); return; }
+      if (!prompt || prompt.length < 10) { setLoading(false); return; }
       const url = await generateAestheticImage(prompt);
       if (active) { setImgUrl(url); setLoading(false); }
     };
@@ -93,23 +101,26 @@ const FormulaImage = ({ prompt, onPromptUpdate, isEditable }: { prompt: string, 
     onPromptUpdate?.(p);
   };
 
+  if (!prompt || prompt.length < 10) return null;
+
   if (loading) return (
-    <div className="w-full h-64 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse flex items-center justify-center p-4">
-      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating Textbook Diagram...</div>
+    <div className="w-full h-64 rounded-3xl bg-slate-100 dark:bg-slate-800 animate-pulse flex flex-col items-center justify-center p-8 gap-4">
+      <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Generating Diagram...</div>
     </div>
   );
 
   if (!imgUrl && !loading) return null;
 
   return (
-    <div className="my-10 space-y-4">
-      <div className="bg-white p-4 rounded-3xl border-2 border-slate-100 shadow-xl overflow-hidden group transition-all hover:border-indigo-600">
-        <img src={imgUrl!} alt="Educational Diagram" className="w-full h-auto block rounded-2xl mx-auto max-w-lg" />
+    <div className="my-12 space-y-4 section-card">
+      <div className="bg-white p-6 rounded-[3rem] border-4 border-slate-50 shadow-2xl overflow-hidden group transition-all hover:border-indigo-600">
+        <img src={imgUrl!} alt="Educational Diagram" className="w-full h-auto block rounded-2xl mx-auto max-w-xl transition-transform group-hover:scale-105" />
       </div>
       {isEditable && (
         <div className="no-print space-y-2 max-w-lg mx-auto">
           <input className="w-full text-[10px] p-2 bg-white border border-slate-300 rounded outline-none" value={p} onChange={e => setP(e.target.value)} />
-          <button onClick={handleRegenerate} className="w-full bg-slate-900 text-white text-[10px] py-1 rounded font-black uppercase tracking-widest">Update Photo</button>
+          <button onClick={handleRegenerate} className="w-full bg-slate-900 text-white text-[10px] py-2 rounded font-black uppercase tracking-widest">Regenerate Diagram</button>
         </div>
       )}
     </div>
@@ -131,34 +142,19 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin, onRefresh })
   useEffect(() => { setCurrentNote(note); }, [note]);
 
   const stopAudio = () => {
-    if (sourceNodeRef.current) {
-      sourceNodeRef.current.stop();
-      sourceNodeRef.current = null;
-    }
+    if (sourceNodeRef.current) { sourceNodeRef.current.stop(); sourceNodeRef.current = null; }
     setIsReading(null);
   };
 
   const handleRead = async (text: string, id: string) => {
-    if (isReading === id) {
-      stopAudio();
-      return;
-    }
-    stopAudio();
-    setIsReading(id);
-
+    if (isReading === id) { stopAudio(); return; }
+    stopAudio(); setIsReading(id);
     const base64Audio = await generateSpeech(text);
-    if (!base64Audio) {
-      setIsReading(null);
-      return;
-    }
-
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
+    if (!base64Audio) { setIsReading(null); return; }
+    if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     const ctx = audioContextRef.current;
     const bytes = decodeBase64(base64Audio);
     const audioBuffer = await decodeAudioData(bytes, ctx);
-    
     const source = ctx.createBufferSource();
     source.buffer = audioBuffer;
     source.connect(ctx.destination);
@@ -177,120 +173,85 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin, onRefresh })
     if (!section) return null;
     const isFormula = section.type === 'formula' || section.type === 'reaction';
     const sectionId = `sec-${index}`;
-    const formulaItems = isFormula ? (section.content || "").split('---').filter(f => f.trim()) : [section.content || ""];
 
     return (
-      <div key={index} className="my-24">
-        <div className="flex items-end justify-between mb-8 border-b-2 border-slate-100 dark:border-slate-800 pb-4">
-          <div className="space-y-1">
-            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.4em] mb-1 block">Concept {index + 1}</span>
+      <div key={index} className="my-24 section-card">
+        <div className="flex items-end justify-between mb-8 border-b-4 border-slate-50 dark:border-slate-900 pb-4">
+          <div className="space-y-2">
+            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.4em]">Core Concept {index + 1}</span>
             <FormattedText 
               text={section.title} 
               isEditable={isAdmin} 
               onUpdate={v => updateSection(index, 'title', v)}
-              className="text-2xl md:text-3xl font-black text-black dark:text-white tracking-tighter uppercase"
+              className="text-3xl md:text-4xl font-black text-black dark:text-white uppercase tracking-tighter"
             />
           </div>
           {!isAdmin && (
-            <button 
-              onClick={() => handleRead(section.content || "", sectionId)}
-              className={`no-print px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${isReading === sectionId ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-indigo-600'}`}
-            >
-              {isReading === sectionId ? '⏹ STOP' : '🔊 READ'}
+            <button onClick={() => handleRead(section.content || "", sectionId)} className={`no-print px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${isReading === sectionId ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'}`}>
+              {isReading === sectionId ? '⏹ STOP AUDIO' : '🔊 READ ALOUD'}
             </button>
           )}
         </div>
 
-        <div className="space-y-10">
-          {formulaItems.map((item, fIdx) => (
-            <div key={fIdx} className={isFormula ? "bg-slate-50 dark:bg-slate-900/50 p-10 md:p-16 rounded-[2.5rem] border-2 border-slate-200 dark:border-slate-800 relative group" : "w-full"}>
-              {isFormula && (
-                <div className="absolute right-10 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-700 font-serif italic text-lg select-none">
-                  ({index + 1}.{fIdx + 1})
-                </div>
-              )}
-              <FormattedText 
-                text={item.trim()} 
-                isEditable={isAdmin} 
-                onUpdate={v => updateSection(index, 'content', v)}
-                className={isFormula 
-                  ? "text-3xl md:text-5xl font-serif italic text-black dark:text-white text-center leading-relaxed tracking-tight" 
-                  : "note-content text-lg md:text-2xl font-bold text-slate-800 dark:text-slate-200 leading-[1.8]"}
-              />
-              {isFormula && (
-                <div className="mt-8 text-center">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Textbook Standard Equation</span>
-                </div>
-              )}
-            </div>
-          ))}
-
+        <div className="space-y-8">
+          <div className={isFormula ? "bg-indigo-50 dark:bg-indigo-950/40 p-12 rounded-[3.5rem] border-2 border-indigo-100 dark:border-indigo-900 shadow-inner" : ""}>
+             <FormattedText 
+              text={section.content} 
+              isEditable={isAdmin} 
+              onUpdate={v => updateSection(index, 'content', v)}
+              className={isFormula 
+                ? "text-3xl md:text-6xl font-serif italic text-black dark:text-white leading-tight text-center" 
+                : "note-content text-xl md:text-2xl font-bold dark:text-slate-100 leading-relaxed"}
+            />
+          </div>
           {section.visualPrompt && <FormulaImage prompt={section.visualPrompt} isEditable={isAdmin} onPromptUpdate={p => updateSection(index, 'visualPrompt', p)} />}
         </div>
       </div>
     );
   };
 
-  // Error State: If sections are missing but loading finished
-  if (!currentNote.sections || currentNote.sections.length === 0) {
-    return (
-      <div className="note-container max-w-5xl mx-auto py-20 px-10 bg-white dark:bg-slate-950 shadow-2xl text-center space-y-8">
-        <div className="text-8xl">⚠️</div>
-        <h2 className="text-4xl font-black uppercase tracking-tighter">Content Generation Failed</h2>
-        <p className="text-slate-500 uppercase font-black text-xs tracking-widest">Something went wrong while assembling these notes. This usually happens if the AI was interrupted.</p>
-        <button onClick={onRefresh} className="bg-indigo-600 text-white px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">Try Again (Regenerate)</button>
-      </div>
-    );
-  }
-
   return (
-    <div className="note-container max-w-5xl mx-auto py-16 px-6 md:px-20 bg-white dark:bg-slate-950 shadow-2xl relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-2 bg-indigo-600"></div>
+    <div className="note-container max-w-5xl mx-auto py-20 px-6 md:px-24 bg-white dark:bg-slate-950 shadow-[0_0_100px_rgba(0,0,0,0.05)] relative rounded-[3rem]">
+      <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600 rounded-t-[3rem]"></div>
       
-      <div className="flex justify-between items-center mb-16 no-print">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-indigo-600 text-white rounded flex items-center justify-center font-black text-lg">A12</div>
-          <span className="font-black text-[10px] uppercase tracking-[0.4em] dark:text-white">BOARD MASTER</span>
-        </Link>
-        <div className="flex gap-4">
-           <button onClick={onRefresh} className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest hover:text-indigo-600 transition-all">Regenerate</button>
-           <button onClick={() => window.print()} className="bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all">Save Notes PDF</button>
-        </div>
+      <div className="flex justify-between items-center mb-20 no-print">
+         <Link to="/" className="flex items-center gap-2">
+           <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-lg">A</div>
+           <span className="font-black text-xs uppercase tracking-widest dark:text-white">ACE12TH</span>
+         </Link>
+         <button onClick={() => window.print()} className="bg-black text-white dark:bg-white dark:text-black px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">DOWNLOAD PDF</button>
       </div>
 
-      <header className="mb-24 text-center space-y-4">
-        <FormattedText 
-          text={currentNote.chapterTitle || "Untitled Chapter"} 
-          className="text-4xl md:text-6xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.9]"
-        />
-        <div className="flex justify-center gap-3">
-          <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest">Class 12 Boards</span>
-          <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest">Part {currentNote.part} Archive</span>
+      <header className="mb-32 text-center space-y-8">
+        <div className="inline-block bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-[0.4em] shadow-sm">Master File • 2026 Batch</div>
+        <h1 className="text-5xl md:text-8xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">{currentNote.chapterTitle}</h1>
+        <div className="flex justify-center gap-4">
+          <span className="bg-slate-50 dark:bg-slate-900 text-slate-500 text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest border border-slate-100 dark:border-slate-800">Archive ID: {note.subject?.toUpperCase()}</span>
+          <span className="bg-slate-50 dark:bg-slate-900 text-slate-500 text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest border border-slate-100 dark:border-slate-800">Part {currentNote.part}</span>
         </div>
       </header>
 
-      <div className="space-y-4">
-        {currentNote.sections.map((section, idx) => renderSection(section, idx))}
-      </div>
+      <div className="space-y-6">{currentNote.sections.map((section, idx) => renderSection(section, idx))}</div>
 
       {currentNote.importantQuestions && currentNote.importantQuestions.length > 0 && (
-        <div className="mt-32 pt-16 border-t-4 border-amber-100 dark:border-amber-900/30 space-y-12">
-           <div className="text-center">
-              <span className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-[0.3em]">High-Yield Board Questions</span>
-              <h2 className="text-3xl font-black text-black dark:text-white uppercase tracking-tighter mt-4">Must Practice for Exam</h2>
+        <div className="mt-40 pt-24 border-t-8 border-amber-50 dark:border-amber-900/20 space-y-16">
+           <div className="text-center space-y-4">
+             <div className="text-amber-500 text-6xl mb-6">🏆</div>
+             <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white uppercase tracking-tighter">High-Yield PYQs</h2>
+             <p className="text-slate-400 font-black text-xs uppercase tracking-[0.3em]">Must-Solve Questions for Board Exams</p>
            </div>
            
-           <div className="grid gap-8">
-             {currentNote.importantQuestions.slice(0, 2).map((q, idx) => (
-               <div key={idx} className="bg-amber-50 dark:bg-slate-900 p-8 md:p-12 rounded-[2.5rem] border-2 border-amber-200 dark:border-amber-900/40 shadow-lg group">
-                  <div className="flex items-center gap-3 mb-6">
-                    <span className="w-10 h-10 bg-amber-500 text-white rounded-full flex items-center justify-center font-black">Q</span>
-                    <span className="text-amber-700 dark:text-amber-400 font-black text-[9px] uppercase tracking-widest">{q.yearAnalysis}</span>
+           <div className="grid gap-12">
+             {currentNote.importantQuestions.map((q, idx) => (
+               <div key={idx} className="bg-amber-50 dark:bg-slate-900/50 p-12 rounded-[4rem] border-4 border-amber-100 dark:border-amber-900/30 shadow-2xl section-card">
+                  <div className="flex items-center gap-4 mb-8">
+                    <span className="bg-amber-500 text-white text-xs px-6 py-2 rounded-full font-black uppercase">PYQ Analysis</span>
+                    <span className="text-amber-700 dark:text-amber-400 font-black text-xs uppercase tracking-widest">{q.yearAnalysis}</span>
                   </div>
-                  <FormattedText text={q.question || ""} className="text-xl md:text-2xl font-black dark:text-white mb-8 leading-tight" />
-                  <div className="bg-white dark:bg-black/40 p-6 rounded-2xl border border-amber-100 dark:border-amber-900/20">
-                    <p className="text-amber-600 text-[9px] font-black uppercase tracking-widest mb-2">Detailed AI Solution:</p>
-                    <FormattedText text={q.solution || ""} className="text-lg font-bold dark:text-slate-300 leading-relaxed" />
+                  <FormattedText text={q.question} className="text-3xl font-black dark:text-white mb-10 leading-tight" />
+                  <div className="bg-white dark:bg-black/30 p-10 rounded-[2.5rem] border-2 border-amber-100 dark:border-amber-900/20 shadow-inner">
+                    <div className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-6">Master Solution:</div>
+                    <FormattedText text={q.solution} className="text-xl font-bold dark:text-slate-200 leading-relaxed" />
                   </div>
                </div>
              ))}
@@ -298,29 +259,12 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin, onRefresh })
         </div>
       )}
 
-      <footer className="mt-40 pt-20 border-t-8 border-slate-50 dark:border-slate-900 text-center no-print">
-          <div className="bg-indigo-600 text-white p-12 md:p-20 rounded-[4rem] shadow-2xl space-y-10 relative overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-rose-500/20 rounded-full blur-3xl"></div>
-            
-            <div className="relative z-10 space-y-6">
-              <div className="text-8xl animate-bounce-slow">💎</div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black text-amber-300 uppercase tracking-[0.3em] animate-pulse">Want More Highly Expected Questions?</h3>
-                <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none">99% SURE QUESTIONS <br/><span className="text-white">FOR YOUR BOARDS.</span></h2>
-              </div>
-              
-              <p className="text-lg md:text-xl font-bold text-indigo-100 uppercase max-w-2xl mx-auto leading-relaxed">
-                Unlock the <span className="text-amber-300">Elite 50+ Repeated Questions Vault</span> for {currentNote.subject.replace('_', ' ')} including Case Studies & Assertion-Reason.
-              </p>
-
-              <div className="pt-6">
-                <Link to={`/vault/${currentNote.subject}`} className="inline-block bg-white text-indigo-600 px-16 py-8 rounded-[2rem] font-black text-lg uppercase tracking-widest shadow-2xl hover:scale-110 active:scale-95 transition-all group">
-                  BUY PREMIUM VAULT NOW <span className="inline-block group-hover:translate-x-2 transition-transform">🚀</span>
-                </Link>
-              </div>
-            </div>
-          </div>
+      <footer className="mt-48 pt-24 border-t-2 border-slate-100 dark:border-slate-800 text-center space-y-10">
+         <p className="text-xs font-black text-slate-300 uppercase tracking-[1em]">END OF ARCHIVE</p>
+         <div className="flex justify-center gap-6 no-print pt-10">
+           <Link to="/premium" className="bg-rose-600 text-white px-12 py-6 rounded-3xl font-black uppercase text-xs shadow-2xl hover:scale-105 active:scale-95 transition-all">Unlock Premium Vault</Link>
+           <button onClick={onRefresh} className="bg-slate-900 text-white dark:bg-white dark:text-black px-12 py-6 rounded-3xl font-black uppercase text-xs shadow-lg">Regenerate AI Data</button>
+         </div>
       </footer>
     </div>
   );
