@@ -16,12 +16,44 @@ const DEFAULT_SETTINGS: AppSettings = {
   isVaultOpen: true
 };
 
+const Breadcrumbs = () => {
+  const { id, subjectId, title } = useParams();
+  const location = useLocation();
+  const path = location.pathname;
+
+  const getSubjectName = (sid: string) => SUBJECTS.find(s => s.id === sid)?.name || sid;
+
+  return (
+    <nav className="no-print mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+      <Link to="/" className="hover:text-indigo-600 transition-colors">Home</Link>
+      {id && (
+        <>
+          <span className="opacity-30">/</span>
+          <Link to={`/subject/${id}`} className="hover:text-indigo-600 transition-colors">{getSubjectName(id)}</Link>
+        </>
+      )}
+      {subjectId && (
+        <>
+          <span className="opacity-30">/</span>
+          <Link to={`/subject/${subjectId}`} className="hover:text-indigo-600 transition-colors">{getSubjectName(subjectId)}</Link>
+        </>
+      )}
+      {title && (
+        <>
+          <span className="opacity-30">/</span>
+          <span className="text-slate-600 dark:text-slate-400 truncate max-w-[150px]">{title}</span>
+        </>
+      )}
+    </nav>
+  );
+};
+
 const BackButton = () => {
   const navigate = useNavigate();
   const location = useLocation();
   if (location.pathname === '/') return null;
   return (
-    <div className="no-print mb-8 flex items-center gap-4">
+    <div className="no-print mb-4 flex items-center gap-4">
       <button 
         onClick={() => {
           if (window.history.length > 1) navigate(-1);
@@ -34,9 +66,6 @@ const BackButton = () => {
         </div>
         <span className="font-black text-[10px] uppercase tracking-widest">Go Back</span>
       </button>
-      <Link to="/" className="w-10 h-10 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-600 transition-all">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V120A15.87,15.87,0,0,0,219.31,108.68ZM208,216H160V160a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"></path></svg>
-      </Link>
     </div>
   );
 };
@@ -55,8 +84,28 @@ const MobileHeader = ({ user }: { user: UserProfile | null }) => (
 );
 
 const Footer = () => (
-  <footer className="no-print bg-slate-900 text-slate-400 py-10 px-6 mt-20 border-t border-slate-800">
-    <div className="max-w-7xl mx-auto flex flex-col items-center space-y-6">
+  <footer className="no-print bg-slate-900 text-slate-400 py-16 px-6 mt-20 border-t border-slate-800">
+    <div className="max-w-7xl mx-auto flex flex-col items-center space-y-10">
+      {/* Trust Badges for AdSense Confidence */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full max-w-4xl border-b border-slate-800 pb-10">
+        <div className="flex flex-col items-center text-center space-y-2">
+          <span className="text-2xl">🛡️</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">AI Verified Content</span>
+        </div>
+        <div className="flex flex-col items-center text-center space-y-2">
+          <span className="text-2xl">🔒</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Secure Payments</span>
+        </div>
+        <div className="flex flex-col items-center text-center space-y-2">
+          <span className="text-2xl">📖</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">NCERT Aligned</span>
+        </div>
+        <div className="flex flex-col items-center text-center space-y-2">
+          <span className="text-2xl">⚡</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Fast Learning</span>
+        </div>
+      </div>
+
       <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-[11px] font-bold uppercase tracking-widest">
         <Link to="/" className="hover:text-white transition-colors">Home</Link>
         <Link to="/about" className="hover:text-white transition-colors">About ACE12THGRADE</Link>
@@ -65,8 +114,10 @@ const Footer = () => (
         <Link to="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link>
         <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
       </nav>
-      <div className="text-[9px] uppercase tracking-[0.3em] opacity-40 text-center">
-        © 2026 ACE12THGRADE • EMPOWERING CLASS 12 STUDENTS • ALL RIGHTS RESERVED
+      
+      <div className="text-[9px] uppercase tracking-[0.3em] opacity-40 text-center space-y-2">
+        <p>© 2026 ACE12THGRADE • EMPOWERING CLASS 12 STUDENTS</p>
+        <p>ALL RIGHTS RESERVED • MADE WITH ❤️ FOR BOARD EXAMS</p>
       </div>
     </div>
   </footer>
@@ -76,6 +127,7 @@ const Footer = () => (
 
 const PageLayout = ({ title, children }: { title: string, children?: React.ReactNode }) => (
   <div className="p-6 md:p-16 max-w-4xl mx-auto animate-in fade-in duration-500">
+    <Breadcrumbs />
     <BackButton />
     <div className="bg-white dark:bg-slate-900 p-8 md:p-16 rounded-[3rem] border-4 border-slate-100 dark:border-slate-800 shadow-2xl space-y-8">
       <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter dark:text-white border-b-4 border-indigo-600 pb-4 inline-block">{title}</h1>
@@ -217,6 +269,7 @@ const Login = ({ onLogin }: { onLogin: (email: string) => void }) => {
   };
   return (
     <div className="p-8 md:p-16 max-w-4xl mx-auto">
+      <Breadcrumbs />
       <BackButton />
       <div className="bg-white dark:bg-slate-900 p-10 md:p-20 rounded-[4rem] border-4 border-slate-100 dark:border-slate-800 shadow-2xl text-center space-y-10">
         <div className="w-20 h-20 bg-indigo-600 text-white rounded-[1.5rem] flex items-center justify-center font-black mx-auto text-3xl shadow-xl">A12</div>
@@ -267,6 +320,7 @@ const VaultView = ({ purchased, userEmail }: { purchased: string[], userEmail?: 
   if (!isUnlocked) {
     return (
       <div className="p-8 md:p-16 text-center space-y-8 animate-in fade-in">
+        <Breadcrumbs />
         <BackButton />
         <div className="text-9xl">🔒</div>
         <h2 className="text-4xl font-black uppercase tracking-tighter dark:text-white">Vault Restricted</h2>
@@ -289,11 +343,14 @@ const VaultView = ({ purchased, userEmail }: { purchased: string[], userEmail?: 
 
   return (
     <div className="p-6 md:p-16 max-w-7xl mx-auto space-y-12">
-      <div className="no-print flex justify-between items-start">
-        <BackButton />
-        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-xl">
-          <span>⬇️</span> DOWNLOAD PDF
-        </button>
+      <div className="no-print flex flex-col gap-2">
+        <Breadcrumbs />
+        <div className="flex justify-between items-start">
+          <BackButton />
+          <button onClick={() => window.print()} className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-xl">
+            <span>⬇️</span> DOWNLOAD PDF
+          </button>
+        </div>
       </div>
       <header className="text-center space-y-6">
         <span className="bg-indigo-600 text-white px-6 py-1.5 rounded-full font-black text-[9px] uppercase tracking-widest">VAULT ACCESS: ACTIVE</span>
@@ -343,7 +400,13 @@ const ChapterView = () => {
       <h2 className="text-3xl font-black uppercase tracking-tighter dark:text-white">Assembling Master Files...</h2>
     </div>
   );
-  return <div className="p-4 md:p-10"><BackButton />{note ? <NoteRenderer note={note} /> : <div className="p-20 text-center font-black">Error loading notes.</div>}</div>;
+  return (
+    <div className="p-4 md:p-10">
+      <Breadcrumbs />
+      <BackButton />
+      {note ? <NoteRenderer note={note} /> : <div className="p-20 text-center font-black">Error loading notes.</div>}
+    </div>
+  );
 };
 
 const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: AppSettings, setPurchased: React.Dispatch<React.SetStateAction<string[]>>, purchased: string[], user: UserProfile | null }) => {
@@ -393,6 +456,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
 
   return (
     <div className="p-6 md:p-16 max-w-7xl mx-auto space-y-16 relative pb-48">
+      <Breadcrumbs />
       <BackButton />
       <header className="text-center space-y-12">
         <h2 className="text-5xl md:text-8xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">THE <span className="text-rose-600">VAULT.</span></h2>
@@ -490,6 +554,7 @@ const SubjectPage = ({ purchased }: { purchased: string[] }) => {
 
   return (
     <div className="p-6 md:p-16 max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500">
+      <Breadcrumbs />
       <BackButton />
       <header className="flex flex-col lg:flex-row items-center gap-12 border-b-4 border-slate-100 dark:border-slate-900 pb-16">
         <div className="text-[8rem] md:text-[10rem] drop-shadow-2xl animate-in zoom-in duration-700">{subject.icon}</div>
