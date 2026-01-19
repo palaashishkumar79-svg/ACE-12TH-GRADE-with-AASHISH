@@ -20,7 +20,8 @@ IMAGE PROMPTING:
 
 CLEANLINESS:
 - No excessive emojis. 
-- Professional, academic, and authoritative.`;
+- Professional, academic, and authoritative.
+- Output MUST be valid JSON matching the schema strictly.`;
 
 const NOTE_SCHEMA = {
   type: Type.OBJECT,
@@ -88,11 +89,18 @@ export const generateChapterNotes = async (
   subjectId: SubjectId, 
   chapterTitle: string, 
   part: number,
-  totalParts: number
+  totalParts: number,
+  forceRefresh = false
 ): Promise<ChapterNote> => {
   const cacheKey = `note_v2026_full_q2_${subjectId}_${chapterTitle}_${part}`;
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) return JSON.parse(cached);
+  
+  if (!forceRefresh) {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed.sections && parsed.sections.length > 0) return parsed;
+    }
+  }
 
   const result = await retryRequest(async () => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -100,17 +108,25 @@ export const generateChapterNotes = async (
       model: "gemini-3-flash-preview",
       contents: `Generate deep master notes for "${chapterTitle}" (${subjectId}), Part ${part}/${totalParts}. 
       MANDATORY: 
-      1. Include exactly 2 High-Yield Important Questions at the end of this part.
-      2. For every section of type 'formula' or 'reaction', include a 'visualPrompt'.
-      3. Use clear textbook standards.`,
+      1. Use clear, simple language (Hinglish mix for tricks is okay).
+      2. Include exactly 2 High-Yield Important Questions at the end.
+      3. Focus on quality definitions and derivation steps if any.
+      4. Ensure valid JSON structure.`,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: NOTE_SCHEMA,
       },
     });
-    const parsed = JSON.parse(response.text || '{}');
-    const finalNote = { ...parsed, part };
+    
+    const text = response.text || '{}';
+    const parsed = JSON.parse(text);
+    
+    // Safety fallback for empty arrays
+    if (!parsed.sections) parsed.sections = [];
+    if (!parsed.importantQuestions) parsed.importantQuestions = [];
+    
+    const finalNote = { ...parsed, part, subject: subjectId };
     localStorage.setItem(cacheKey, JSON.stringify(finalNote));
     return finalNote;
   });
@@ -127,7 +143,7 @@ export const generatePremiumQuestions = async (subjectId: SubjectId): Promise<Pr
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Generate exactly 50 most repeated and predicted Board Exam questions for ${subjectId} (2026 Pattern). 
-      Format: JSON array of objects.`,
+      Include MCQs, Case Studies, and Long Answers.`,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
@@ -152,7 +168,7 @@ export const generateAestheticImage = async (prompt: string, force = false): Pro
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
-        contents: { parts: [{ text: `${prompt}. Clean textbook illustration, mathematical precision, high-quality diagram, 2D vector style, white background.` }] },
+        contents: { parts: [{ text: `${prompt}. Professional textbook diagram, clean lines, white background, high contrast.` }] },
         config: { imageConfig: { aspectRatio: "1:1" } }
       });
       for (const part of response.candidates[0].content.parts) {
@@ -172,7 +188,7 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Professional explanation: ${text}` }] }],
+      contents: [{ parts: [{ text: `Explain this clearly: ${text}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {

@@ -86,7 +86,6 @@ const MobileHeader = ({ user }: { user: UserProfile | null }) => (
 const Footer = () => (
   <footer className="no-print bg-slate-900 text-slate-400 py-16 px-6 mt-20 border-t border-slate-800">
     <div className="max-w-7xl mx-auto flex flex-col items-center space-y-10">
-      {/* Trust Badges for AdSense Confidence */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full max-w-4xl border-b border-slate-800 pb-10">
         <div className="flex flex-col items-center text-center space-y-2">
           <span className="text-2xl">🛡️</span>
@@ -123,8 +122,6 @@ const Footer = () => (
   </footer>
 );
 
-// --- AdSense Compliance Pages ---
-
 const PageLayout = ({ title, children }: { title: string, children?: React.ReactNode }) => (
   <div className="p-6 md:p-16 max-w-4xl mx-auto animate-in fade-in duration-500">
     <Breadcrumbs />
@@ -140,68 +137,48 @@ const PageLayout = ({ title, children }: { title: string, children?: React.React
 
 const AboutPage = () => (
   <PageLayout title="About ACE12THGRADE">
-    <p>Welcome to <strong>ACE12THGRADE</strong>, your dedicated platform for high-impact Class 12 Board Exam preparation. We focus on providing precision-engineered study materials designed to help students achieve excellence in their final board exams.</p>
+    <p>Welcome to <strong>ACE12THGRADE</strong>, your dedicated platform for high-impact Class 12 Board Exam preparation.</p>
     <p>Our platform is built on the philosophy that smart preparation beats hard work. By using AI-curated insights, we filter the vast syllabus into what actually matters for your exams.</p>
     <h3 className="text-xl font-bold text-black dark:text-white uppercase tracking-tight">Why Choose ACE12THGRADE?</h3>
     <ul className="list-disc pl-6 space-y-2">
-      <li><strong>Precision AI Notes:</strong> Our notes are structured specifically for the latest 2026 Board Exam patterns, focusing on clarity and retention.</li>
-      <li><strong>The Premium Vault Archive:</strong> A curated collection of the 50 most repeated questions from the last 10 years, solved with step-by-step AI logic.</li>
-      <li><strong>Concept-First Approach:</strong> We don't just give you answers; we provide the 'Tricks' and 'Shortcuts' (in Hinglish where needed) to solve problems faster.</li>
-      <li><strong>Exam-Ready Formatting:</strong> All our content is optimized for PDF download, allowing you to study anywhere, anytime without distractions.</li>
+      <li><strong>Precision AI Notes:</strong> Structured specifically for the latest 2026 Board Exam patterns.</li>
+      <li><strong>The Premium Vault Archive:</strong> Curated collection of the 50 most repeated questions.</li>
+      <li><strong>Concept-First Approach:</strong> Shortcuts and tricks to solve problems faster.</li>
     </ul>
-    <p>At ACE12THGRADE, we are committed to being the most reliable resource for Class 12 students across Physics, Chemistry, Maths, English, Computer Science, and Physical Education.</p>
   </PageLayout>
 );
 
 const ContactPage = () => (
   <PageLayout title="Contact Us">
-    <p>Need help with your Vault access or have questions about our notes? Our support team is ready to assist you.</p>
+    <p>Need help with your Vault access or have questions? Our support team is ready to assist you.</p>
     <div className="bg-indigo-50 dark:bg-indigo-950/40 p-8 rounded-3xl border-2 border-indigo-100 dark:border-indigo-900 space-y-4">
       <p className="font-black text-indigo-600 uppercase tracking-widest text-sm">Official Support Email:</p>
       <a href="mailto:ace12thgrade@gmail.com" className="text-2xl md:text-3xl font-black text-black dark:text-white hover:underline block truncate">ace12thgrade@gmail.com</a>
     </div>
-    <p>We aim to respond to all student queries within 24 hours. If you've made a purchase, please mention your transaction details or registered email for faster resolution.</p>
   </PageLayout>
 );
 
 const DisclaimerPage = () => (
   <PageLayout title="Disclaimer">
-    <p>The information provided by <strong>ACE12THGRADE</strong> is for general educational purposes. While our AI systems and human editors work to ensure accuracy, educational patterns and marking schemes may vary.</p>
-    <p><strong>Educational Resource:</strong> Our content should be used as a supplementary resource alongside your official <strong>NCERT Textbooks</strong>. We do not claim to replace the official curriculum provided by educational boards.</p>
-    <p><strong>Predictions:</strong> Our 'Most Repeated Questions' and 'Predicted PYQs' are based on statistical analysis of previous year papers. They are high-probability questions but do not guarantee their appearance in any specific exam.</p>
-    <p><strong>Non-Affiliation:</strong> ACE12THGRADE is an independent platform and is not affiliated with or endorsed by CBSE, CISCE, or any other state board.</p>
+    <p>The information provided by <strong>ACE12THGRADE</strong> is for general educational purposes. While our AI systems work to ensure accuracy, educational patterns may vary.</p>
   </PageLayout>
 );
 
 const PrivacyPolicyPage = () => (
   <PageLayout title="Privacy Policy">
-    <p>Your privacy is important to us at ACE12THGRADE. This policy explains how we handle your data.</p>
-    <h3 className="text-xl font-bold text-black dark:text-white uppercase tracking-tight">Data Handling</h3>
-    <p>We collect your <strong>Email Address</strong> during account synchronization. This is used solely to maintain your access to the Premium Vault and to send important exam updates.</p>
-    <h3 className="text-xl font-bold text-black dark:text-white uppercase tracking-tight">Security</h3>
-    <p>We utilize browser Local Storage to keep your preferences and purchase data secure on your local device. We do not store payment sensitive information on our servers; all transactions are handled via secure third-party gateways.</p>
-    <h3 className="text-xl font-bold text-black dark:text-white uppercase tracking-tight">Cookies</h3>
-    <p>We may use cookies to improve your browsing experience and for analytics to understand which subjects are most popular among our students.</p>
+    <p>Your privacy is important to us. We collect your Email Address during account synchronization solely to maintain your access to the Premium Vault.</p>
   </PageLayout>
 );
 
 const BlogPlaceholder = () => (
   <PageLayout title="ACE12THGRADE Blog">
-    <p>Stay tuned for our upcoming articles on Board Exam strategies:</p>
-    <ul className="list-disc pl-6 space-y-2">
-      <li>Subject-wise Weightage Analysis for 2026.</li>
-      <li>How to write answers like a Board Topper.</li>
-      <li>Mistakes to avoid in Practical Exams.</li>
-      <li>Revision hacks for the last 30 days.</li>
-    </ul>
+    <p>Stay tuned for our upcoming articles on Board Exam strategies.</p>
   </PageLayout>
 );
 
-// --- End of AdSense Pages ---
-
 const FomoToast = () => {
   const [msgIdx, setMsgIdx] = useState(0);
-  const messages = ["⚠️ Price rising to ₹99 soon!", "🚀 8,400+ students already in", "📄 High-Quality PDF Downloads Available!"];
+  const messages = ["⚠️ Price rising soon!", "🚀 8,400+ students already in", "📄 High-Quality PDF Downloads!"];
   useEffect(() => {
     const timer = setInterval(() => setMsgIdx(p => (p + 1) % messages.length), 4000);
     return () => clearInterval(timer);
@@ -324,7 +301,7 @@ const VaultView = ({ purchased, userEmail }: { purchased: string[], userEmail?: 
         <BackButton />
         <div className="text-9xl">🔒</div>
         <h2 className="text-4xl font-black uppercase tracking-tighter dark:text-white">Vault Restricted</h2>
-        <p className="text-slate-500 uppercase font-black text-xs max-w-lg mx-auto leading-relaxed">This vault contains 50+ high-yield predicted questions. Unlock to access and download PDF.</p>
+        <p className="text-slate-500 uppercase font-black text-xs max-w-lg mx-auto leading-relaxed">Unlock to access 50+ high-yield predicted questions archive.</p>
         <div className="flex flex-col gap-4 max-w-xs mx-auto">
           <Link to="/premium" className="bg-rose-600 text-white px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">Unlock Vault ₹29</Link>
           <Link to="/login" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Already Purchased? Sync Now</Link>
@@ -337,7 +314,6 @@ const VaultView = ({ purchased, userEmail }: { purchased: string[], userEmail?: 
     <div className="min-h-screen flex flex-col items-center justify-center p-10 text-center space-y-10 animate-pulse">
       <div className="text-9xl">💎</div>
       <h2 className="text-4xl font-black uppercase tracking-tighter dark:text-white">Generating PDF Archive...</h2>
-      <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Assembling predicted questions for {subject?.name}</p>
     </div>
   );
 
@@ -355,7 +331,6 @@ const VaultView = ({ purchased, userEmail }: { purchased: string[], userEmail?: 
       <header className="text-center space-y-6">
         <span className="bg-indigo-600 text-white px-6 py-1.5 rounded-full font-black text-[9px] uppercase tracking-widest">VAULT ACCESS: ACTIVE</span>
         <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter dark:text-white">{subject?.name} <span className="text-indigo-600">PREDICTIONS.</span></h2>
-        <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest max-w-xl mx-auto">Elite 50 most repeated Board Exam questions with AI-powered solutions.</p>
       </header>
       <div className="grid gap-12">
         {questions.map((q, idx) => (
@@ -380,31 +355,34 @@ const ChapterView = () => {
   const { subjectId, title, part, total } = useParams<{ subjectId: string, title: string, part: string, total: string }>();
   const [note, setNote] = useState<ChapterNote | null>(null);
   const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const fetchNote = async () => {
-      setLoading(true);
-      try { 
-        const data = await generateChapterNotes(subjectId as SubjectId, title!, parseInt(part!), parseInt(total!)); 
-        setNote(data); 
-      } catch (err) { 
-        console.error("Notes failed:", err);
-      } finally { 
-        setLoading(false); 
-      }
-    };
-    fetchNote();
-  }, [subjectId, title, part, total]);
+  
+  const fetchNote = async (force = false) => {
+    setLoading(true);
+    try { 
+      const data = await generateChapterNotes(subjectId as SubjectId, title!, parseInt(part!), parseInt(total!), force); 
+      setNote(data); 
+    } catch (err) { 
+      console.error("Notes failed:", err);
+    } finally { 
+      setLoading(false); 
+    }
+  };
+
+  useEffect(() => { fetchNote(); }, [subjectId, title, part, total]);
+
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-10 text-center animate-pulse">
       <div className="text-8xl mb-8">📖</div>
       <h2 className="text-3xl font-black uppercase tracking-tighter dark:text-white">Assembling Master Files...</h2>
+      <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-4">Generating {title} - Part {part}</p>
     </div>
   );
+  
   return (
     <div className="p-4 md:p-10">
       <Breadcrumbs />
       <BackButton />
-      {note ? <NoteRenderer note={note} /> : <div className="p-20 text-center font-black">Error loading notes.</div>}
+      {note ? <NoteRenderer note={note} onRefresh={() => fetchNote(true)} /> : <div className="p-20 text-center font-black">Error loading notes.</div>}
     </div>
   );
 };
@@ -449,7 +427,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
       setIsProcessing(false);
       setIsCheckoutOpen(false);
       setCart([]);
-      alert(`SUCCESS! Vault content is now UNLOCKED for you. Go to subject page to View & Download.`);
+      alert(`SUCCESS! Vault is now UNLOCKED.`);
       navigate('/');
     }, 1800);
   };
@@ -460,23 +438,7 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
       <BackButton />
       <header className="text-center space-y-12">
         <h2 className="text-5xl md:text-8xl font-black text-black dark:text-white tracking-tighter uppercase leading-none">THE <span className="text-rose-600">VAULT.</span></h2>
-        <p className="text-lg font-bold text-slate-500 uppercase tracking-widest max-w-2xl mx-auto">Get 50+ Most Repeated Board PYQs & High-Yield Predictions for 2026.</p>
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          <div className="bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 p-8 rounded-[3rem] text-center">
-            <span className="text-[10px] font-black text-indigo-600 uppercase mb-2 block tracking-widest">1 Subject</span>
-            <div className="text-4xl font-black dark:text-white">₹29</div>
-          </div>
-          <div className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-300 p-8 rounded-[3rem] text-center relative">
-            <div className="absolute top-4 right-4 bg-emerald-500 text-white text-[8px] font-black px-3 py-1 rounded-full">20% OFF</div>
-            <span className="text-[10px] font-black text-emerald-600 uppercase mb-2 block tracking-widest">3+ Subjects</span>
-            <div className="text-4xl font-black dark:text-white">COMBO</div>
-          </div>
-          <div className="bg-rose-50 dark:bg-rose-900/20 border-2 border-rose-300 p-8 rounded-[3rem] text-center relative">
-            <div className="absolute top-4 right-4 bg-rose-600 text-white text-[8px] font-black px-3 py-1 rounded-full">30% OFF</div>
-            <span className="text-[10px] font-black text-rose-600 uppercase mb-2 block tracking-widest">All Subjects</span>
-            <div className="text-4xl font-black dark:text-white">ELITE</div>
-          </div>
-        </div>
+        <p className="text-lg font-bold text-slate-500 uppercase tracking-widest max-w-2xl mx-auto">Get 50+ Most Repeated Board PYQs & Predictions for 2026.</p>
       </header>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -501,7 +463,6 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
               <div className="w-12 h-12 bg-rose-600 rounded-xl flex items-center justify-center text-2xl text-white">🛒</div>
               <div>
                 <div className="text-white font-black text-xl uppercase tracking-tighter">{cart.length} SUBJECTS SELECTED</div>
-                {label && <div className="text-emerald-400 font-black text-[8px] uppercase tracking-widest animate-pulse">✨ {label} DISCOUNT APPLIED</div>}
               </div>
            </div>
            <div className="flex items-center gap-8">
@@ -518,15 +479,8 @@ const PremiumPortal = ({ settings, setPurchased, purchased, user }: { settings: 
         <div className="fixed inset-0 z-[600] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
            <div className="bg-white dark:bg-slate-900 w-full max-w-xl p-10 rounded-[3.5rem] border-8 border-indigo-600 space-y-8 text-center overflow-hidden">
               <h2 className="text-3xl font-black uppercase tracking-tighter">Instant Unlock</h2>
-              <div className="space-y-4">
-                <div className="flex justify-between font-black uppercase text-[10px] text-slate-500"><span>Subtotal</span><span>₹{subtotal}</span></div>
-                {discountAmount > 0 && <div className="flex justify-between font-black uppercase text-[10px] text-emerald-500 bg-emerald-50 p-3 rounded-xl border border-emerald-100"><span>Savings</span><span>-₹{discountAmount.toFixed(0)}</span></div>}
-                <div className="flex justify-between items-center border-t-2 pt-6"><span className="text-xl font-black uppercase tracking-tighter">Total</span><span className="text-4xl font-black text-indigo-600">₹{total.toFixed(0)}</span></div>
-              </div>
               <div className="space-y-2 bg-indigo-50 dark:bg-indigo-950/40 p-6 rounded-3xl border-2 border-indigo-100 dark:border-indigo-900">
-                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-3">Link to your Email Account</p>
                 <input type="email" placeholder="YOUR EMAIL ADDRESS" className="w-full p-6 bg-white dark:bg-black border-2 border-slate-200 dark:border-slate-800 rounded-2xl font-black text-center text-black dark:text-white outline-none focus:border-indigo-600" value={email} onChange={e => setEmail(e.target.value)} />
-                <p className="text-[8px] font-bold text-slate-400 mt-2 uppercase tracking-widest">Immediate access to Vault PDF archives after payment.</p>
               </div>
               <button onClick={handleFinalUnlock} disabled={isProcessing} className="w-full bg-rose-600 text-white py-8 rounded-[2rem] font-black text-2xl uppercase tracking-widest shadow-xl active:scale-95 transition-all">
                 {isProcessing ? 'INITIALIZING...' : `PAY ₹${total.toFixed(0)}`}
@@ -564,19 +518,16 @@ const SubjectPage = ({ purchased }: { purchased: string[] }) => {
             {isPurchased ? (
               <div className="flex flex-col md:flex-row items-center gap-4">
                  <Link to={`/vault/${id}`} className="bg-emerald-500 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl hover:scale-105 transition-all">✓ OPEN PREMIUM VAULT</Link>
-                 <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">VAULT UNLOCKED</span>
               </div>
             ) : (
               <div className="flex flex-col md:flex-row items-center gap-6">
                 <Link to="/premium" className="bg-rose-600 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl animate-pulse">💎 UNLOCK VAULT ARCHIVE</Link>
-                <Link to="/login" className="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600">Restore Past Purchase</Link>
               </div>
             )}
           </div>
         </div>
       </header>
       <div className="grid gap-8">
-        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-4">Course Contents</div>
         {subject.chapters.map((chapter, idx) => (
           <div key={chapter.id} className="p-8 md:p-10 bg-white dark:bg-slate-900 rounded-[3rem] border-4 border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-8 shadow-lg hover:border-indigo-600 transition-all group">
             <div className="flex-1 text-center md:text-left">
@@ -609,7 +560,6 @@ const Home = () => {
             <button onClick={() => subjectsRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-black text-white dark:bg-white dark:text-black px-12 py-6 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Free Notes</button>
             <Link to="/premium" className="bg-rose-600 text-white px-12 py-6 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Unlock Vault</Link>
           </div>
-          <Link to="/login" className="text-[10px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest flex items-center gap-3 transition-all bg-slate-100 px-6 py-3 rounded-full dark:bg-slate-900 border-2 border-slate-200"><span>🔄</span> Restore Purchased Access</Link>
         </div>
       </header>
       <div ref={subjectsRef} className="mt-40 max-w-7xl mx-auto px-6 space-y-16">
@@ -661,8 +611,7 @@ const App = () => {
     localStorage.setItem(PURCHASE_KEY, JSON.stringify(merged));
     setPurchased(merged);
     setUser({ email: cleanEmail, purchasedSubjects: merged as SubjectId[], lastSync: Date.now() });
-    if (cloudPurchases.length > 0) alert(`✅ SYNCED! Vault access restored for ${cleanEmail}.`);
-    else alert(`Account linked. No previous purchases found for this email.`);
+    if (cloudPurchases.length > 0) alert(`✅ SYNCED! Vault access restored.`);
   };
 
   const handleLogout = () => { setUser(null); alert('Logged out.'); };

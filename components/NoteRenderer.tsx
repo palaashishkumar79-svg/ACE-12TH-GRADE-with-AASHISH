@@ -32,8 +32,8 @@ export interface FormattedTextProps {
 }
 
 export const FormattedText: React.FC<FormattedTextProps> = ({ text, className = "", isEditable, onUpdate }) => {
-  const [localText, setLocalText] = useState(text);
-  useEffect(() => { setLocalText(text); }, [text]);
+  const [localText, setLocalText] = useState(text || "");
+  useEffect(() => { setLocalText(text || ""); }, [text]);
 
   if (isEditable) {
     return (
@@ -119,9 +119,10 @@ const FormulaImage = ({ prompt, onPromptUpdate, isEditable }: { prompt: string, 
 interface NoteRendererProps {
   note: ChapterNote;
   isAdmin?: boolean;
+  onRefresh?: () => void;
 }
 
-const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin }) => {
+const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin, onRefresh }) => {
   const [currentNote, setCurrentNote] = useState(note);
   const [isReading, setIsReading] = useState<string | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -173,13 +174,13 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin }) => {
   };
 
   const renderSection = (section: NoteSection, index: number) => {
+    if (!section) return null;
     const isFormula = section.type === 'formula' || section.type === 'reaction';
     const sectionId = `sec-${index}`;
-    const formulaItems = isFormula ? section.content.split('---').filter(f => f.trim()) : [section.content];
+    const formulaItems = isFormula ? (section.content || "").split('---').filter(f => f.trim()) : [section.content || ""];
 
     return (
       <div key={index} className="my-24">
-        {/* Section Header */}
         <div className="flex items-end justify-between mb-8 border-b-2 border-slate-100 dark:border-slate-800 pb-4">
           <div className="space-y-1">
             <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.4em] mb-1 block">Concept {index + 1}</span>
@@ -192,7 +193,7 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin }) => {
           </div>
           {!isAdmin && (
             <button 
-              onClick={() => handleRead(section.content, sectionId)}
+              onClick={() => handleRead(section.content || "", sectionId)}
               className={`no-print px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${isReading === sectionId ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-indigo-600'}`}
             >
               {isReading === sectionId ? '⏹ STOP' : '🔊 READ'}
@@ -200,7 +201,6 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin }) => {
           )}
         </div>
 
-        {/* Content Area */}
         <div className="space-y-10">
           {formulaItems.map((item, fIdx) => (
             <div key={fIdx} className={isFormula ? "bg-slate-50 dark:bg-slate-900/50 p-10 md:p-16 rounded-[2.5rem] border-2 border-slate-200 dark:border-slate-800 relative group" : "w-full"}>
@@ -225,12 +225,23 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin }) => {
             </div>
           ))}
 
-          {/* Diagram for Formula */}
           {section.visualPrompt && <FormulaImage prompt={section.visualPrompt} isEditable={isAdmin} onPromptUpdate={p => updateSection(index, 'visualPrompt', p)} />}
         </div>
       </div>
     );
   };
+
+  // Error State: If sections are missing but loading finished
+  if (!currentNote.sections || currentNote.sections.length === 0) {
+    return (
+      <div className="note-container max-w-5xl mx-auto py-20 px-10 bg-white dark:bg-slate-950 shadow-2xl text-center space-y-8">
+        <div className="text-8xl">⚠️</div>
+        <h2 className="text-4xl font-black uppercase tracking-tighter">Content Generation Failed</h2>
+        <p className="text-slate-500 uppercase font-black text-xs tracking-widest">Something went wrong while assembling these notes. This usually happens if the AI was interrupted.</p>
+        <button onClick={onRefresh} className="bg-indigo-600 text-white px-12 py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">Try Again (Regenerate)</button>
+      </div>
+    );
+  }
 
   return (
     <div className="note-container max-w-5xl mx-auto py-16 px-6 md:px-20 bg-white dark:bg-slate-950 shadow-2xl relative overflow-hidden">
@@ -241,12 +252,15 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin }) => {
           <div className="w-10 h-10 bg-indigo-600 text-white rounded flex items-center justify-center font-black text-lg">A12</div>
           <span className="font-black text-[10px] uppercase tracking-[0.4em] dark:text-white">BOARD MASTER</span>
         </Link>
-        <button onClick={() => window.print()} className="bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all">Save Notes PDF</button>
+        <div className="flex gap-4">
+           <button onClick={onRefresh} className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest hover:text-indigo-600 transition-all">Regenerate</button>
+           <button onClick={() => window.print()} className="bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all">Save Notes PDF</button>
+        </div>
       </div>
 
       <header className="mb-24 text-center space-y-4">
         <FormattedText 
-          text={currentNote.chapterTitle} 
+          text={currentNote.chapterTitle || "Untitled Chapter"} 
           className="text-4xl md:text-6xl font-black text-black dark:text-white tracking-tighter uppercase leading-[0.9]"
         />
         <div className="flex justify-center gap-3">
@@ -255,12 +269,10 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin }) => {
         </div>
       </header>
 
-      {/* Main Content Sections */}
       <div className="space-y-4">
         {currentNote.sections.map((section, idx) => renderSection(section, idx))}
       </div>
 
-      {/* Free Sample Questions (Requested) */}
       {currentNote.importantQuestions && currentNote.importantQuestions.length > 0 && (
         <div className="mt-32 pt-16 border-t-4 border-amber-100 dark:border-amber-900/30 space-y-12">
            <div className="text-center">
@@ -275,10 +287,10 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin }) => {
                     <span className="w-10 h-10 bg-amber-500 text-white rounded-full flex items-center justify-center font-black">Q</span>
                     <span className="text-amber-700 dark:text-amber-400 font-black text-[9px] uppercase tracking-widest">{q.yearAnalysis}</span>
                   </div>
-                  <FormattedText text={q.question} className="text-xl md:text-2xl font-black dark:text-white mb-8 leading-tight" />
+                  <FormattedText text={q.question || ""} className="text-xl md:text-2xl font-black dark:text-white mb-8 leading-tight" />
                   <div className="bg-white dark:bg-black/40 p-6 rounded-2xl border border-amber-100 dark:border-amber-900/20">
                     <p className="text-amber-600 text-[9px] font-black uppercase tracking-widest mb-2">Detailed AI Solution:</p>
-                    <FormattedText text={q.solution} className="text-lg font-bold dark:text-slate-300 leading-relaxed" />
+                    <FormattedText text={q.solution || ""} className="text-lg font-bold dark:text-slate-300 leading-relaxed" />
                   </div>
                </div>
              ))}
@@ -286,10 +298,8 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin }) => {
         </div>
       )}
 
-      {/* CTA Section */}
       <footer className="mt-40 pt-20 border-t-8 border-slate-50 dark:border-slate-900 text-center no-print">
           <div className="bg-indigo-600 text-white p-12 md:p-20 rounded-[4rem] shadow-2xl space-y-10 relative overflow-hidden">
-            {/* Visual Flare */}
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-rose-500/20 rounded-full blur-3xl"></div>
             
@@ -308,10 +318,6 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin }) => {
                 <Link to={`/vault/${currentNote.subject}`} className="inline-block bg-white text-indigo-600 px-16 py-8 rounded-[2rem] font-black text-lg uppercase tracking-widest shadow-2xl hover:scale-110 active:scale-95 transition-all group">
                   BUY PREMIUM VAULT NOW <span className="inline-block group-hover:translate-x-2 transition-transform">🚀</span>
                 </Link>
-              </div>
-              
-              <div className="pt-4 text-[9px] font-black text-indigo-200 uppercase tracking-widest opacity-60">
-                Limited Time Offer: Unlock your 95%+ Board Strategy
               </div>
             </div>
           </div>
