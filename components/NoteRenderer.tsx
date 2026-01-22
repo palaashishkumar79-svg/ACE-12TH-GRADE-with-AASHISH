@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { ChapterNote, NoteSection } from '../types';
 import { generateAestheticImage, generateSpeech } from '../services/geminiService';
 
-// Audio Utility Functions
 function decodeBase64(base64: string) {
   const binaryString = atob(base64);
   const bytes = new Uint8Array(binaryString.length);
@@ -24,122 +23,58 @@ async function decodeAudioData(data: Uint8Array, ctx: AudioContext): Promise<Aud
   return buffer;
 }
 
-export interface FormattedTextProps {
-  text: string;
-  className?: string;
-  isEditable?: boolean;
-  onUpdate?: (newVal: string) => void;
-}
-
-export const FormattedText: React.FC<FormattedTextProps> = ({ text, className = "", isEditable, onUpdate }) => {
-  const [localText, setLocalText] = useState(text || "");
-  useEffect(() => { setLocalText(text || ""); }, [text]);
-
-  if (isEditable) {
-    return (
-      <textarea 
-        className={`${className} w-full bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-indigo-400 p-2 rounded outline-none font-bold`}
-        value={localText}
-        onChange={(e) => {
-          setLocalText(e.target.value);
-          onUpdate?.(e.target.value);
-        }}
-        rows={Math.max(3, localText.split('\n').length)}
-      />
-    );
-  }
-
+export const FormattedText: React.FC<{text: string, className?: string}> = ({ text, className = "" }) => {
   const elements = useMemo(() => {
     if (!text) return "";
-    
-    // STRICT CLEANER: Removes common AI artifacts
     const clean = text
       .replace(/\\/g, '')
-      .replace(/visualPrompt:.*$/gmi, '') // Remove visualPrompt leaks
-      .replace(/---/g, '\n')              // Remove dash separators
+      .replace(/visualPrompt:.*$/gmi, '') 
+      .replace(/---/g, '')              
       .replace(/Trick:/g, '**Pro Trick:**')
+      .replace(/`|#|>/g, '') 
+      .replace(/\n{3,}/g, '\n\n')
       .trim();
       
     const parts = clean.split(/(\*\*.*?\*\*)/gs);
-    
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return (
-          <strong key={i} className="font-extrabold text-indigo-700 dark:text-indigo-400">
-            {part.slice(2, -2)}
-          </strong>
-        );
+        return <strong key={i} className="text-indigo-700 dark:text-indigo-400 font-extrabold">{part.slice(2, -2)}</strong>;
       }
       return <span key={i}>{part}</span>;
     });
   }, [text]);
-
-  return <div className={`${className} leading-relaxed whitespace-pre-wrap`}>{elements}</div>;
+  return <div className={`${className} whitespace-pre-wrap`}>{elements}</div>;
 };
 
-export const FormulaImage = ({ prompt, onPromptUpdate, isEditable }: { prompt: string, onPromptUpdate?: (p: string) => void, isEditable?: boolean }) => {
+export const FormulaImage = ({ prompt }: { prompt: string }) => {
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [p, setP] = useState(prompt);
 
   useEffect(() => {
-    let active = true;
     const fetchImg = async () => {
-      if (!prompt || prompt.length < 10) { setLoading(false); return; }
+      if (!prompt) return;
       const url = await generateAestheticImage(prompt);
-      if (active) { setImgUrl(url); setLoading(false); }
+      setImgUrl(url);
+      setLoading(false);
     };
     fetchImg();
-    return () => { active = false; };
   }, [prompt]);
 
-  const handleRegenerate = async () => {
-    setLoading(true);
-    const url = await generateAestheticImage(p, true);
-    setImgUrl(url);
-    setLoading(false);
-    onPromptUpdate?.(p);
-  };
-
-  if (!prompt || prompt.length < 10) return null;
-
-  if (loading) return (
-    <div className="w-full h-64 rounded-3xl bg-slate-100 dark:bg-slate-800 animate-pulse flex flex-col items-center justify-center p-8 gap-4">
-      <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-      <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Generating Diagram...</div>
-    </div>
-  );
-
-  if (!imgUrl && !loading) return null;
+  if (loading) return <div className="w-full h-80 bg-slate-50 dark:bg-slate-900 animate-pulse rounded-[3rem] border-2 border-dashed border-slate-200" />;
+  if (!imgUrl) return null;
 
   return (
-    <div className="my-12 space-y-4 section-card">
-      <div className="bg-white p-6 rounded-[3rem] border-4 border-slate-50 shadow-2xl overflow-hidden group transition-all hover:border-indigo-600">
-        <img src={imgUrl!} alt="Educational Diagram" className="w-full h-auto block rounded-2xl mx-auto max-w-xl transition-transform group-hover:scale-105" />
-      </div>
-      {isEditable && (
-        <div className="no-print space-y-2 max-w-lg mx-auto">
-          <input className="w-full text-[10px] p-2 bg-white border border-slate-300 rounded outline-none" value={p} onChange={e => setP(e.target.value)} />
-          <button onClick={handleRegenerate} className="w-full bg-slate-900 text-white text-[10px] py-2 rounded font-black uppercase tracking-widest">Regenerate Diagram</button>
-        </div>
-      )}
+    <div className="my-16 p-8 bg-white dark:bg-slate-900 rounded-[4rem] border-4 border-slate-50 dark:border-slate-800 shadow-2xl transition-all hover:border-indigo-600 group">
+      <img src={imgUrl} alt="Educational Diagram" className="w-full h-auto rounded-3xl mx-auto max-w-2xl group-hover:scale-[1.02] transition-transform" />
+      <p className="mt-6 text-center text-[10px] font-black uppercase text-slate-300 tracking-widest">Master Archive Scientific Illustration</p>
     </div>
   );
 };
 
-interface NoteRendererProps {
-  note: ChapterNote;
-  isAdmin?: boolean;
-  onRefresh?: () => void;
-}
-
-const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin, onRefresh }) => {
-  const [currentNote, setCurrentNote] = useState(note);
+const NoteRenderer: React.FC<{note: ChapterNote, onRefresh?: () => void}> = ({ note, onRefresh }) => {
   const [isReading, setIsReading] = useState<string | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
-
-  useEffect(() => { setCurrentNote(note); }, [note]);
 
   const stopAudio = () => {
     if (sourceNodeRef.current) { sourceNodeRef.current.stop(); sourceNodeRef.current = null; }
@@ -163,94 +98,53 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin, onRefresh })
     sourceNodeRef.current = source;
   };
 
-  const updateSection = (idx: number, field: keyof NoteSection, value: string) => {
-    const updated = { ...currentNote };
-    (updated.sections[idx] as any)[field] = value;
-    setCurrentNote(updated);
-  };
-
-  const renderSection = (section: NoteSection, index: number) => {
-    if (!section) return null;
-    const isFormula = section.type === 'formula' || section.type === 'reaction';
-    const sectionId = `sec-${index}`;
-
-    return (
-      <div key={index} className="my-24 section-card">
-        <div className="flex items-end justify-between mb-8 border-b-4 border-slate-50 dark:border-slate-900 pb-4">
-          <div className="space-y-2">
-            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.4em]">Core Concept {index + 1}</span>
-            <FormattedText 
-              text={section.title} 
-              isEditable={isAdmin} 
-              onUpdate={v => updateSection(index, 'title', v)}
-              className="text-3xl md:text-4xl font-black text-black dark:text-white uppercase tracking-tighter"
-            />
-          </div>
-          {!isAdmin && (
-            <button onClick={() => handleRead(section.content || "", sectionId)} className={`no-print px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${isReading === sectionId ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'}`}>
-              {isReading === sectionId ? '⏹ STOP AUDIO' : '🔊 READ ALOUD'}
-            </button>
-          )}
-        </div>
-
-        <div className="space-y-8">
-          <div className={isFormula ? "bg-indigo-50 dark:bg-indigo-950/40 p-12 rounded-[3.5rem] border-2 border-indigo-100 dark:border-indigo-900 shadow-inner" : ""}>
-             <FormattedText 
-              text={section.content} 
-              isEditable={isAdmin} 
-              onUpdate={v => updateSection(index, 'content', v)}
-              className={isFormula 
-                ? "text-3xl md:text-6xl font-serif italic text-black dark:text-white leading-tight text-center" 
-                : "note-content text-xl md:text-2xl font-bold dark:text-slate-100 leading-relaxed"}
-            />
-          </div>
-          {section.visualPrompt && <FormulaImage prompt={section.visualPrompt} isEditable={isAdmin} onPromptUpdate={p => updateSection(index, 'visualPrompt', p)} />}
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="note-container max-w-5xl mx-auto py-20 px-6 md:px-24 bg-white dark:bg-slate-950 shadow-[0_0_100px_rgba(0,0,0,0.05)] relative rounded-[3rem]">
-      <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600 rounded-t-[3rem]"></div>
+    <div className="note-container max-w-5xl mx-auto py-24 px-8 md:px-32 bg-white dark:bg-slate-950 rounded-[4rem] shadow-2xl relative">
+      <div className="absolute top-0 left-0 w-full h-5 bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600 rounded-t-[4rem]" />
       
-      <div className="flex justify-between items-center mb-20 no-print">
-         <Link to="/" className="flex items-center gap-2">
-           <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-lg">A</div>
-           <span className="font-black text-xs uppercase tracking-widest dark:text-white">ACE12TH</span>
-         </Link>
-         <button onClick={() => window.print()} className="bg-black text-white dark:bg-white dark:text-black px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">DOWNLOAD PDF</button>
+      <div className="flex justify-between items-center mb-24 no-print">
+         <Link to="/" className="font-black text-[11px] tracking-[0.3em] dark:text-white uppercase border-b-2 border-indigo-600">ACE12TH MASTER</Link>
+         <button onClick={() => window.print()} className="bg-black dark:bg-white text-white dark:text-black px-10 py-4 rounded-full font-black text-[10px] uppercase shadow-xl hover:scale-105 transition-all">GENERATE PDF</button>
       </div>
 
-      <header className="mb-32 text-center space-y-8">
-        <div className="inline-block bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-[0.4em] shadow-sm">Master File • 2026 Batch</div>
-        <h1 className="text-5xl md:text-8xl font-black text-black dark:text-white uppercase tracking-tighter leading-none">{currentNote.chapterTitle}</h1>
-        <div className="flex justify-center gap-4">
-          <span className="bg-slate-50 dark:bg-slate-900 text-slate-500 text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest border border-slate-100 dark:border-slate-800">Archive ID: {note.subject?.toUpperCase()}</span>
-          <span className="bg-slate-50 dark:bg-slate-900 text-slate-500 text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest border border-slate-100 dark:border-slate-800">Part {currentNote.part}</span>
+      <header className="mb-40 text-center space-y-10">
+        <h1 className="text-6xl md:text-[7rem] font-black dark:text-white uppercase tracking-tighter leading-none">{note.chapterTitle}</h1>
+        <div className="flex justify-center gap-6">
+          <span className="bg-slate-50 dark:bg-slate-900 text-slate-500 text-[11px] font-black px-8 py-3 rounded-full uppercase border-2 dark:border-slate-800">PART {note.part}</span>
+          <span className="bg-indigo-50 text-indigo-600 text-[11px] font-black px-8 py-3 rounded-full uppercase border-2 border-indigo-100">CLASS 12 ARCHIVE</span>
         </div>
       </header>
 
-      <div className="space-y-6">{currentNote.sections.map((section, idx) => renderSection(section, idx))}</div>
+      <div className="space-y-32">
+        {note.sections.map((section, idx) => (
+          <div key={idx} className="section-card">
+            <div className="flex items-end justify-between mb-10 border-b-4 border-slate-50 dark:border-slate-900 pb-6">
+              <h2 className="text-4xl font-black dark:text-white uppercase tracking-tight">{section.title}</h2>
+              <button onClick={() => handleRead(section.content, `s-${idx}`)} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 transition-colors">
+                <span className="text-xl">🔊</span>
+                <span>AI VOICE</span>
+              </button>
+            </div>
+            <FormattedText text={section.content} className="text-2xl font-bold dark:text-slate-100 leading-relaxed note-content" />
+            {section.visualPrompt && <FormulaImage prompt={section.visualPrompt} />}
+          </div>
+        ))}
+      </div>
 
-      {currentNote.importantQuestions && currentNote.importantQuestions.length > 0 && (
-        <div className="mt-40 pt-24 border-t-8 border-amber-50 dark:border-amber-900/20 space-y-16">
-           <div className="text-center space-y-4">
-             <div className="text-amber-500 text-6xl mb-6">🏆</div>
-             <h2 className="text-4xl md:text-5xl font-black text-black dark:text-white uppercase tracking-tighter">High-Yield PYQs</h2>
-             <p className="text-slate-400 font-black text-xs uppercase tracking-[0.3em]">Must-Solve Questions for Board Exams</p>
+      {note.importantQuestions && (
+        <div className="mt-56 pt-32 border-t-8 border-amber-50 dark:border-slate-900">
+           <div className="text-center mb-24 space-y-4">
+              <h2 className="text-5xl font-black uppercase dark:text-white tracking-tighter">High-Yield Predictor</h2>
+              <p className="text-slate-400 font-black text-[11px] uppercase tracking-[0.3em]">Based on 2026 Board Examination Trends</p>
            </div>
-           
-           <div className="grid gap-12">
-             {currentNote.importantQuestions.map((q, idx) => (
-               <div key={idx} className="bg-amber-50 dark:bg-slate-900/50 p-12 rounded-[4rem] border-4 border-amber-100 dark:border-amber-900/30 shadow-2xl section-card">
-                  <div className="flex items-center gap-4 mb-8">
-                    <span className="bg-amber-500 text-white text-xs px-6 py-2 rounded-full font-black uppercase">PYQ Analysis</span>
-                    <span className="text-amber-700 dark:text-amber-400 font-black text-xs uppercase tracking-widest">{q.yearAnalysis}</span>
-                  </div>
-                  <FormattedText text={q.question} className="text-3xl font-black dark:text-white mb-10 leading-tight" />
-                  <div className="bg-white dark:bg-black/30 p-10 rounded-[2.5rem] border-2 border-amber-100 dark:border-amber-900/20 shadow-inner">
-                    <div className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-6">Master Solution:</div>
+           <div className="grid gap-16">
+             {note.importantQuestions.map((q, idx) => (
+               <div key={idx} className="bg-amber-50 dark:bg-slate-900 p-16 rounded-[5rem] border-4 border-amber-100 dark:border-slate-800 shadow-xl relative section-card">
+                  <div className="absolute top-10 right-10 text-amber-200 dark:text-slate-800 font-black text-6xl">Q{idx+1}</div>
+                  <span className="text-amber-700 dark:text-amber-500 font-black text-[11px] uppercase mb-6 block tracking-widest">{q.yearAnalysis}</span>
+                  <FormattedText text={q.question} className="text-3xl font-black mb-12 dark:text-white leading-tight" />
+                  <div className="bg-white dark:bg-black p-12 rounded-[3rem] border-2 border-amber-50 dark:border-slate-800">
+                    <div className="text-amber-600 font-black text-[10px] uppercase mb-4 tracking-widest">Master Solution</div>
                     <FormattedText text={q.solution} className="text-xl font-bold dark:text-slate-200 leading-relaxed" />
                   </div>
                </div>
@@ -259,12 +153,12 @@ const NoteRenderer: React.FC<NoteRendererProps> = ({ note, isAdmin, onRefresh })
         </div>
       )}
 
-      <footer className="mt-48 pt-24 border-t-2 border-slate-100 dark:border-slate-800 text-center space-y-10">
-         <p className="text-xs font-black text-slate-300 uppercase tracking-[1em]">END OF ARCHIVE</p>
-         <div className="flex justify-center gap-6 no-print pt-10">
-           <Link to="/premium" className="bg-rose-600 text-white px-12 py-6 rounded-3xl font-black uppercase text-xs shadow-2xl hover:scale-105 active:scale-95 transition-all">Unlock Premium Vault</Link>
-           <button onClick={onRefresh} className="bg-slate-900 text-white dark:bg-white dark:text-black px-12 py-6 rounded-3xl font-black uppercase text-xs shadow-lg">Regenerate AI Data</button>
+      <footer className="mt-48 pt-24 border-t-4 border-slate-50 dark:border-slate-900 text-center space-y-12 no-print">
+         <div className="space-y-4">
+            <p className="text-slate-400 font-black text-[11px] uppercase tracking-widest">End of Archive Part {note.part}</p>
+            <Link to="/premium" className="inline-block bg-rose-600 text-white px-16 py-7 rounded-[2.5rem] font-black uppercase text-sm shadow-2xl hover:scale-105 transition-all animate-pulse">Unlock 40+ Elite Board Questions</Link>
          </div>
+         {onRefresh && <button onClick={onRefresh} className="text-slate-300 hover:text-indigo-600 font-black uppercase text-[10px] block mx-auto transition-colors">Regenerate Notes (AI Refresh)</button>}
       </footer>
     </div>
   );
