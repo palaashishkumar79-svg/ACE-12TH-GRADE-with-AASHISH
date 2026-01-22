@@ -99,18 +99,20 @@ export const fetchPurchasesFromSheet = async (email: string): Promise<string[]> 
     console.log("Sync Response:", result);
 
     if (result && result.status === "success" && Array.isArray(result.data)) {
-        // Fix: Explicitly type reduce to string[] to avoid unknown[] inference
-        const allSubjects = result.data.reduce<string[]>((acc, curr: any) => {
+        // Fix: Use any[] cast to resolve "Untyped function calls may not accept type arguments" and provide explicit typing for reduce
+        const rawData = result.data as any[];
+        const allSubjects: string[] = rawData.reduce((acc: string[], curr: any) => {
             // Check for both 'productName' and case variations depending on how sheet headers are parsed
             const productStr = curr.productName || curr.Product || curr.Subject || "";
             if (!productStr) return acc;
             
             // Split by comma if multiple subjects were purchased together
-            const subjects = productStr.split(',').map((s: string) => s.trim().toLowerCase());
+            const subjects = (productStr as string).split(',').map((s: string) => s.trim().toLowerCase());
             return [...acc, ...subjects];
-        }, []);
+        }, [] as string[]);
         
-        const uniqueSubjects = Array.from(new Set(allSubjects));
+        // Fix: Explicitly type uniqueSubjects as string[] to satisfy return signature
+        const uniqueSubjects: string[] = Array.from(new Set(allSubjects));
         console.log("Restored subjects:", uniqueSubjects);
         return uniqueSubjects;
     }

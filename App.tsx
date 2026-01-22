@@ -9,6 +9,82 @@ import NoteRenderer, { FormattedText, FormulaImage } from './components/NoteRend
 const PURCHASE_KEY = 'ace12_purchases_v2026_final';
 const REFERRAL_KEY = 'ace12_referrals_v2026';
 
+const Footer = () => (
+  <footer className="bg-slate-900 text-white py-24 px-8 mt-40 no-print">
+    <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-16">
+      <div className="col-span-2 space-y-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center font-black text-2xl">A</div>
+          <span className="font-black text-xl uppercase tracking-widest">Ace12thGRADE</span>
+        </div>
+        <p className="text-slate-400 max-w-md font-medium leading-relaxed">
+          The ultimate AI-powered educational resource for CBSE Class 12 students. We provide verified notes, board-predicted questions, and master archives to help you score 95% and above in your final examinations.
+        </p>
+      </div>
+      <div className="space-y-6">
+        <h4 className="font-black uppercase tracking-widest text-indigo-400">Quick Links</h4>
+        <ul className="space-y-4 text-slate-300 font-bold uppercase text-[11px] tracking-widest">
+          <li><Link to="/" className="hover:text-white transition-colors">Home</Link></li>
+          <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
+          <li><Link to="/premium" className="hover:text-white transition-colors">Premium Vault</Link></li>
+          <li><Link to="/login" className="hover:text-white transition-colors">Cloud Sync</Link></li>
+        </ul>
+      </div>
+      <div className="space-y-6">
+        <h4 className="font-black uppercase tracking-widest text-indigo-400">Legal & Support</h4>
+        <ul className="space-y-4 text-slate-300 font-bold uppercase text-[11px] tracking-widest">
+          <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+          <li><Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+          <li><a href="mailto:palaashishkumar79@gmail.com" className="hover:text-white transition-colors">Contact Support</a></li>
+        </ul>
+      </div>
+    </div>
+    <div className="max-w-7xl mx-auto mt-20 pt-10 border-t border-slate-800 text-center">
+      <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em]">© 2026 Ace12thGRADE Master Archives. All Rights Reserved.</p>
+    </div>
+  </footer>
+);
+
+const AboutUs = () => (
+  <div className="p-8 md:p-24 max-w-4xl mx-auto space-y-16 animate-in fade-in">
+    <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter dark:text-white">About Us</h1>
+    <div className="prose prose-xl dark:prose-invert font-medium text-slate-600 dark:text-slate-300 space-y-8">
+      <p>Ace12thGRADE was founded with a single mission: to democratize high-quality CBSE Class 12 education using the power of Artificial Intelligence. We believe that every student, regardless of their background, deserves access to the most effective study materials.</p>
+      <p>Our platform uses advanced Gemini AI models to analyze past decade's Board Exam papers, identifying recurring patterns and high-yield topics. This information is then translated into comprehensive, easy-to-understand notes and practice sets.</p>
+      <p>Our team consists of senior educators and engineers dedicated to building the future of learning for the 2026 batch and beyond.</p>
+    </div>
+  </div>
+);
+
+const PrivacyPolicy = () => (
+  <div className="p-8 md:p-24 max-w-4xl mx-auto space-y-16 animate-in fade-in">
+    <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter dark:text-white">Privacy Policy</h1>
+    <div className="prose prose-lg dark:prose-invert font-medium text-slate-600 dark:text-slate-300 space-y-6">
+      <p>Last Updated: October 2023</p>
+      <h2 className="text-2xl font-black uppercase tracking-widest dark:text-white">1. Data Collection</h2>
+      <p>We collect minimal personal data necessary for providing our services. This includes your name and email address when you synchronize your account or make a purchase via the Premium Vault.</p>
+      <h2 className="text-2xl font-black uppercase tracking-widest dark:text-white">2. Cookies</h2>
+      <p>We use local storage (cookies) to save your preferences and purchase history on your device. We also use third-party services like Google AdSense which may use cookies to serve personalized ads.</p>
+      <h2 className="text-2xl font-black uppercase tracking-widest dark:text-white">3. Data Security</h2>
+      <p>Your data is stored securely using cloud synchronization. We do not sell your personal information to third parties.</p>
+    </div>
+  </div>
+);
+
+const TermsOfService = () => (
+  <div className="p-8 md:p-24 max-w-4xl mx-auto space-y-16 animate-in fade-in">
+    <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter dark:text-white">Terms of Service</h1>
+    <div className="prose prose-lg dark:prose-invert font-medium text-slate-600 dark:text-slate-300 space-y-6">
+      <h2 className="text-2xl font-black uppercase tracking-widest dark:text-white">1. Acceptable Use</h2>
+      <p>By using Ace12thGRADE, you agree to use our educational materials for personal, non-commercial use only. Redistribution or commercial resale of the AI-generated notes is strictly prohibited.</p>
+      <h2 className="text-2xl font-black uppercase tracking-widest dark:text-white">2. Premium Vault</h2>
+      <p>Unlocking the Premium Vault provides access to specific subject archives. These purchases are non-refundable once the archives have been accessed.</p>
+      <h2 className="text-2xl font-black uppercase tracking-widest dark:text-white">3. Disclaimer</h2>
+      <p>While our AI models strive for 99% accuracy, we recommend cross-referencing all scientific formulas and theories with official NCERT textbooks.</p>
+    </div>
+  </div>
+);
+
 const FomoToast = () => {
   const [msgIdx, setMsgIdx] = useState(0);
   const messages = ["🔥 42 students unlocked Vault just now", "⚠️ Price rising to ₹99 soon!", "🚀 18.5k+ Class 12th users active", "💎 All-Subject Discount ends in 2h"];
@@ -382,6 +458,7 @@ const ChapterView = () => {
 
 const Home = () => (
     <div className="pb-32 px-8">
+      {/* Dynamic Header */}
       <header className="text-center space-y-12 max-w-6xl mx-auto pt-24 animate-in fade-in duration-1000">
         <div className="inline-block bg-indigo-600 text-white px-8 py-3 rounded-full font-black text-[11px] uppercase tracking-[0.4em] shadow-xl">Batch 2026 Master Archives</div>
         <h1 className="text-7xl md:text-[11rem] font-black text-black dark:text-white tracking-tighter leading-[0.75] uppercase">Ace 12th <br/><span className="text-indigo-600">GRADE.</span></h1>
@@ -391,11 +468,45 @@ const Home = () => (
           <Link to="/premium" className="bg-rose-600 text-white px-16 py-7 rounded-[2.5rem] font-black text-sm uppercase animate-pulse shadow-2xl hover:scale-105 transition-all">The Vault</Link>
         </div>
       </header>
-      <div className="mt-56 max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-12">
+
+      {/* Static Publisher Content (AdSense Requirement) */}
+      <section className="mt-40 max-w-5xl mx-auto space-y-20 bg-white dark:bg-slate-900 p-16 md:p-24 rounded-[4rem] border-4 border-slate-50 dark:border-slate-800">
+        <div className="space-y-8">
+          <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter dark:text-white">Mastering Class 12 CBSE Board Exams</h2>
+          <div className="prose prose-lg dark:prose-invert font-medium text-slate-600 dark:text-slate-300 space-y-6">
+            <p>The transition to Class 12 represents one of the most critical phases in a student's academic journey. With the upcoming 2026 Batch facing new curriculum standards and competency-based questions, preparation must be precise, analytical, and comprehensive. At Ace12thGRADE, we provide the ultimate study companion designed specifically for CBSE Science and Humanities students.</p>
+            <p>Our resources cover core subjects including <strong>Physics, Chemistry, Mathematics, English Core, Computer Science, and Physical Education</strong>. Each module is structured to follow the latest NCERT guidelines while integrating insights from past 10 years of Delhi, All India, and Foreign Board papers.</p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-12">
+          <div className="space-y-6">
+            <h3 className="text-2xl font-black uppercase tracking-widest text-indigo-600">Why Study With AI?</h3>
+            <p className="font-bold text-slate-500 uppercase text-xs leading-relaxed tracking-wider">Traditional notes often fail to highlight "repeater" concepts. Our AI algorithms analyze the frequency of topics, ensuring you spend 80% of your time on the 20% of content that guarantees 95% of your marks.</p>
+          </div>
+          <div className="space-y-6">
+            <h3 className="text-2xl font-black uppercase tracking-widest text-rose-600">Verified PYQ Mapping</h3>
+            <p className="font-bold text-slate-500 uppercase text-xs leading-relaxed tracking-wider">Every chapter note is mapped with actual Previous Year Questions (PYQs). We don't just give you theory; we show you how the theory is tested in the actual board examination.</p>
+          </div>
+        </div>
+
+        <div className="pt-10 border-t-2 border-slate-100 dark:border-slate-800">
+           <h4 className="font-black text-xl uppercase mb-6 dark:text-white">Batch 2026 Preparation Strategy</h4>
+           <ul className="grid md:grid-cols-3 gap-6 text-[11px] font-black uppercase text-slate-400 tracking-widest list-none">
+              <li className="flex items-center gap-3"><span className="text-indigo-600">01</span> Conceptual Clarity (NCERT)</li>
+              <li className="flex items-center gap-3"><span className="text-indigo-600">02</span> Derivative & Diagram Mastery</li>
+              <li className="flex items-center gap-3"><span className="text-indigo-600">03</span> Timed Sample Paper Solving</li>
+           </ul>
+        </div>
+      </section>
+
+      {/* Interactive Subject Grid */}
+      <div className="mt-40 max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-12">
         {SUBJECTS.map(subject => (
           <Link key={subject.id} to={`/subject/${subject.id}`} className="bg-white dark:bg-slate-900 p-12 rounded-[5rem] border-4 border-slate-50 dark:border-slate-800 shadow-xl hover:border-indigo-600 hover:scale-[1.05] transition-all flex flex-col items-center group">
             <div className="text-[9rem] group-hover:scale-110 transition-transform drop-shadow-xl">{subject.icon}</div>
             <h3 className="text-4xl font-black dark:text-white uppercase mt-10 tracking-tighter">{subject.name}</h3>
+            <p className="text-slate-400 font-bold uppercase text-[9px] tracking-[0.3em] mt-4">Explore {subject.chapters.length} Units</p>
           </Link>
         ))}
       </div>
@@ -427,10 +538,10 @@ const App = () => {
 
   return (
     <div className={isDark ? 'dark' : ''}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors flex flex-col">
         <HashRouter>
           <MobileHeader />
-          <div className="flex flex-col lg:flex-row">
+          <div className="flex flex-col lg:flex-row flex-1">
             <aside className="no-print w-96 bg-white dark:bg-slate-950 border-r-8 border-slate-50 dark:border-slate-900 h-screen sticky top-0 hidden lg:flex flex-col">
               <div className="p-12 space-y-12">
                 <Link to="/"><div className="w-24 h-24 bg-indigo-600 text-white rounded-[3rem] flex items-center justify-center font-black text-6xl shadow-2xl">A</div></Link>
@@ -449,14 +560,20 @@ const App = () => {
             </aside>
             <main className="flex-1 relative no-scrollbar">
               <FomoToast />
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/subject/:id" element={<SubjectPage purchased={purchased} />} />
-                <Route path="/chapter/:subjectId/:title/:part/:total" element={<ChapterView />} />
-                <Route path="/vault/:subjectId" element={<VaultView purchased={purchased} />} />
-                <Route path="/premium" element={<PremiumPortal purchased={purchased} setPurchased={setPurchased} />} />
-                <Route path="/login" element={<Login onLogin={(u:UserProfile) => setUser(u)} setPurchased={setPurchased} />} />
-              </Routes>
+              <div className="min-h-screen">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/subject/:id" element={<SubjectPage purchased={purchased} />} />
+                  <Route path="/chapter/:subjectId/:title/:part/:total" element={<ChapterView />} />
+                  <Route path="/vault/:subjectId" element={<VaultView purchased={purchased} />} />
+                  <Route path="/premium" element={<PremiumPortal purchased={purchased} setPurchased={setPurchased} />} />
+                  <Route path="/login" element={<Login onLogin={(u:UserProfile) => setUser(u)} setPurchased={setPurchased} />} />
+                  <Route path="/about" element={<AboutUs />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                </Routes>
+              </div>
+              <Footer />
             </main>
           </div>
         </HashRouter>
