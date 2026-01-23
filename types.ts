@@ -39,12 +39,23 @@ export interface ChapterNote {
   part?: number;
 }
 
+export interface QuickRevision {
+  summary: string;
+  formulas: string[];
+  keyPoints: string[];
+}
+
 export interface PremiumQuestion {
-  type?: string; // MCQ, CASE STUDY, etc.
+  type?: string; 
   question: string;
   solution: string;
   freqencyScore: number;
   repeatedYears: string[];
+}
+
+export interface VaultData {
+  revision: QuickRevision;
+  questions: PremiumQuestion[];
 }
 
 export interface Transaction {
